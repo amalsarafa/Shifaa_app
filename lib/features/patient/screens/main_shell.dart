@@ -1,0 +1,37 @@
+// lib/features/main/main_shell.dart
+import 'package:flutter/material.dart';
+import 'package:my_first_app/features/patient/screens/bookings_screen.dart';
+import 'package:my_first_app/features/patient/screens/categories_screen.dart';
+import 'package:my_first_app/features/patient/screens/home_screen.dart';
+import 'package:my_first_app/features/patient/screens/personal_profile.dart';
+import 'package:my_first_app/widgets/bottom_nav_bar.dart';
+
+class MainShell extends StatefulWidget {
+  const MainShell({super.key});
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  int _currentIndex = 0;
+
+  
+  late final List<Widget> _pages = [
+    HomeScreen(onGoToTab: (i) => setState(() => _currentIndex = i)),
+    const CategoriesScreen(),
+    const BookingsScreen(),
+    const PersonalProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _currentIndex, children: _pages),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+      ),
+    );
+  }
+}
