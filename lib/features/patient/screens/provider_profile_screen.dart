@@ -1,190 +1,235 @@
-// lib/features/patient/services/provider_profile_screen.dart
+
+import 'package:my_first_app/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
 
-class ProviderProfileScreen extends StatelessWidget {
+class ProviderProfileArgs {
+  final CareProvider provider;
+  final ServiceItem service;
+  final String categoryTitle;
+
+  const ProviderProfileArgs({
+    required this.provider,
+    required this.service,
+    required this.categoryTitle,
+  });
+}
+
+class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
 
+  @override
+  State<ProviderProfileScreen> createState() => _ProviderProfileScreenState();
+}
+
+class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   static const Color _star = Color(0xFFFFB400);
   static const Color _border = Color(0xFFDDEBEB);
 
-  // ---------- الهيدر (صورة الممرض + الاسم) ----------
-  Widget _header(BuildContext context, CareProvider p) {
-    return SizedBox(
-      height: 300,
+  /// عدد التقييمات الظاهرة قبل الضغط على "عرض الكل"
+  static const int _previewReviews = 2;
+
+  bool _aboutExpanded = false;
+  bool _showAllReviews = false;
+
+  // ───────────────────────── مساعدات ─────────────────────────
+  String _initial(String name) {
+    final n = name.trim();
+    return n.isEmpty ? '?' : n[0];
+  }
+
+  /// صيغة عربية صحيحة للسنوات: سنة / سنتان / 3-10 سنوات / 11+ سنة
+  String _yearsLabel(int y) {
+    if (y <= 0) return '—';
+    if (y == 1) return 'سنة';
+    if (y == 2) return 'سنتان';
+    if (y <= 10) return '$y سنوات';
+    return '$y سنة';
+  }
+
+  // ───────────────────────── بطاقة المقدم (الداكنة) ─────────────────────────
+  Widget _headerCard(CareProvider p) {
+    return Container(
       width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary800,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
         children: [
-          Image.asset(
-            p.image,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            errorBuilder: (_, __, ___) => Container(
-              color: AppColors.primary50,
-              child: Icon(
-                Icons.person_rounded,
-                size: 80,
-                color: AppColors.primary500,
-              ),
-            ),
-          ),
-          // تدرج داكن لتوضيح النص
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.25),
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.6),
-                ],
-                stops: const [0, 0.4, 1],
-              ),
-            ),
-          ),
-          // زر الرجوع
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Align(
-                alignment: AlignmentDirectional.topStart,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                  color: AppColors.white,
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
-          ),
-          // الشارة + الاسم + الوظيفة والتقييم
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 40,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+          SizedBox(
+            width: 88,
+            height: 88,
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                if (p.isVerified)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.verified_rounded,
-                          size: 14,
-                          color: AppColors.primary500,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'موثّق',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary800,
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.white, width: 3),
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      p.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, __) {
+                        debugPrint('Provider image error: ${p.image} → $error');
+                        return Container(
+                          color: AppColors.primary50,
+                          alignment: Alignment.center,
+                          child: Text(
+                            _initial(p.name),
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary800,
+                            ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                const SizedBox(height: 8),
-                Text(
-                  p.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                ),
+                if (p.isVerified)
+                  PositionedDirectional(
+                    bottom: 0,
+                    end: 0,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary500,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 14,
+                        color: AppColors.white,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      p.role,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(Icons.star_rounded, size: 16, color: _star),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${p.rating} (${p.reviewsCount}+ تقييم)',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            p.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            p.role,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: AppColors.white),
           ),
         ],
       ),
     );
   }
 
-  // ---------- بطاقة الإحصائيات ----------
-  Widget _statItem(String value, String label) {
+  // ───────────────────────── بطاقة الأرقام ─────────────────────────
+  Widget _statItem({
+    required String value,
+    required String label,
+    bool withStar = false,
+  }) {
     return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary800,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (withStar) ...[
+                  const Icon(Icons.star_rounded, size: 18, color: _star),
+                  const SizedBox(width: 4),
+                ],
+                Flexible(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.neutralDarkActive,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: AppColors.neutralDark),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.neutralDark,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _statsCard(CareProvider p) {
+    final reviewsLabel = p.reviewsCount > 0
+        ? '${p.reviewsCount} تقييم'
+        : 'لا تقييمات';
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _border),
       ),
-      child: Row(
-        children: [
-          _statItem('${p.rating}', '${p.reviewsCount}+ تقييم'),
-          Container(width: 1, height: 36, color: _border),
-          _statItem('${p.yearsExp}+ سنوات', 'الخبرة'),
-          Container(width: 1, height: 36, color: _border),
-          _statItem('${p.visitsDone}+', 'زيارة منجزة'),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _statItem(
+              value: '${p.rating}',
+              label: reviewsLabel,
+              withStar: true,
+            ),
+            const VerticalDivider(width: 1, thickness: 1, color: _border),
+            _statItem(value: _yearsLabel(p.yearsExp), label: 'الخبرة'),
+            const VerticalDivider(width: 1, thickness: 1, color: _border),
+            _statItem(
+              value: p.visitsDone > 0 ? '${p.visitsDone}' : '—',
+              label: 'زيارات منجزة',
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ---------- عنوان القسم ----------
+  // ───────────────────────── عن مقدم الرعاية ─────────────────────────
   Widget _sectionTitle(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
         color: AppColors.neutralDarkActive,
@@ -192,18 +237,92 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  // ---------- بطاقة تقييم ----------
-  String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return '?';
-    return parts.take(2).map((w) => w[0]).join(' ');
+  Widget _linkButton({required String label, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary700,
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _reviewCard(ProviderReview r) {
+  Widget _aboutCard(CareProvider p) {
+    final about = p.about.trim();
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _border),
+      ),
+      child: about.isEmpty
+          ? const Text(
+              'لا توجد نبذة عن مقدم الرعاية بعد.',
+              style: TextStyle(fontSize: 13, color: AppColors.neutralDark),
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                // نقيس هل النص أطول من 3 أسطر عشان نعرض "اقرأ المزيد" عند الحاجة فقط
+                final style = DefaultTextStyle.of(context).style.merge(
+                  const TextStyle(
+                    fontSize: 13,
+                    height: 1.6,
+                    color: AppColors.neutralDark,
+                  ),
+                );
+
+                final painter = TextPainter(
+                  text: TextSpan(text: about, style: style),
+                  maxLines: 3,
+                  textDirection: TextDirection.rtl,
+                  // نفس تكبير الخط اللي بيستخدمه Text الفعلي
+                  textScaler: MediaQuery.textScalerOf(context),
+                )..layout(maxWidth: constraints.maxWidth);
+
+                final overflows = painter.didExceedMaxLines;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      about,
+                      style: style,
+                      maxLines: _aboutExpanded ? null : 3,
+                      overflow: _aboutExpanded
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
+                    ),
+                    if (overflows) ...[
+                      const SizedBox(height: 4),
+                      _linkButton(
+                        label: _aboutExpanded ? 'عرض أقل' : 'اقرأ المزيد',
+                        onTap: () =>
+                            setState(() => _aboutExpanded = !_aboutExpanded),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+    );
+  }
+
+  // ───────────────────────── التقييمات ─────────────────────────
+  Widget _reviewCard(ProviderReview r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -214,34 +333,43 @@ class ProviderProfileScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.primary50,
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary50,
+                  shape: BoxShape.circle,
+                ),
                 child: Text(
-                  _initials(r.name),
-                  style: TextStyle(
-                    fontSize: 11,
+                  _initial(r.name),
+                  style: const TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary800,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       r.name,
-                      style: TextStyle(
-                        fontSize: 13,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: AppColors.neutralDarkActive,
                       ),
                     ),
                     Text(
                       r.timeAgo,
-                      style: TextStyle(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.neutralDark,
                       ),
@@ -249,11 +377,12 @@ class ProviderProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               const Icon(Icons.star_rounded, size: 16, color: _star),
-              const SizedBox(width: 2),
+              const SizedBox(width: 4),
               Text(
-                r.rating.toStringAsFixed(1),
-                style: TextStyle(
+                '${r.rating}',
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: AppColors.neutralDarkActive,
@@ -263,10 +392,10 @@ class ProviderProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            r.comment,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.5,
+            '“${r.comment}”',
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.6,
               color: AppColors.neutralDark,
             ),
           ),
@@ -275,153 +404,114 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final p = ModalRoute.of(context)!.settings.arguments as CareProvider;
+  Widget _reviewsSection(CareProvider p) {
+    final reviews = p.reviews;
+    final visible = _showAllReviews
+        ? reviews
+        : reviews.take(_previewReviews).toList();
+    final total = p.reviewsCount > 0 ? p.reviewsCount : reviews.length;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _header(context, p),
-              // الجزء السفلي متداخل مع الصورة بزوايا دائرية
-              Transform.translate(
-                offset: const Offset(0, -24),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _statsCard(p),
-                      if (p.about.isNotEmpty) ...[
-                        const SizedBox(height: 20),
-                        _AboutSection(text: p.about),
-                      ],
-                      const SizedBox(height: 20),
-                      _sectionTitle('تقييمات المرضى'),
-                      const SizedBox(height: 12),
-                      if (p.reviews.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Center(
-                            child: Text(
-                              'لا توجد تقييمات بعد.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.neutralDark,
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        ...p.reviews.map(_reviewCard),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _sectionTitle('تقييمات المرضى ($total)')),
+            if (reviews.length > _previewReviews)
+              _linkButton(
+                label: _showAllReviews ? 'عرض أقل' : 'عرض الكل',
+                onTap: () => setState(() => _showAllReviews = !_showAllReviews),
               ),
-            ],
-          ),
+          ],
         ),
-        // زر الحجز ثابت أسفل الشاشة
-        bottomNavigationBar: SafeArea(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            color: AppColors.background,
-            child: SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigator.pushNamed(context, 'Booking', arguments: p);
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: AppColors.primary500,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'احجز الآن',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
+        const SizedBox(height: 8),
+        if (reviews.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _border),
             ),
+            child: const Text(
+              'لا توجد تقييمات بعد.',
+              style: TextStyle(fontSize: 13, color: AppColors.neutralDark),
+            ),
+          )
+        else
+          ...visible.map(_reviewCard),
+      ],
+    );
+  }
+
+  // ───────────────────────── زر الحجز (ثابت أسفل الشاشة) ─────────────────────────
+  Widget _bookBar(BuildContext context, ProviderProfileArgs args) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        border: Border(top: BorderSide(color: _border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: AppButton(
+            text: 'احجز الآن',
+            onPressed: () => Navigator.pushNamed(context, 'BookService'),
           ),
         ),
       ),
     );
   }
-}
 
-/// قسم "عن مقدم الرعاية" مع زر "اقرأ المزيد"
-/// StatefulWidget لأن حالته تتغير (موسّع / مختصر)
-class _AboutSection extends StatefulWidget {
-  final String text;
-
-  const _AboutSection({required this.text});
-
-  @override
-  State<_AboutSection> createState() => _AboutSectionState();
-}
-
-class _AboutSectionState extends State<_AboutSection> {
-  bool _expanded = false;
-
+  // ───────────────────────── البناء ─────────────────────────
   @override
   Widget build(BuildContext context) {
-    // نعرض زر "اقرأ المزيد" فقط إذا كان النص طويلاً
-    final isLong = widget.text.length > 110;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as ProviderProfileArgs;
+    final p = args.provider;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'عن مقدم الرعاية',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          toolbarHeight: 90,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          widget.text,
-          maxLines: _expanded ? null : 3,
-          overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 13,
-            height: 1.5,
-            color: AppColors.neutralDark,
-          ),
-        ),
-        if (isLong) ...[
-          const SizedBox(height: 4),
-          GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Text(
-              _expanded ? 'عرض أقل' : 'اقرأ المزيد',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary800,
-              ),
+          title: const Text(
+            'ملف مقدم الرعاية',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.neutralDarkActive,
             ),
           ),
-        ],
-      ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          children: [
+            _headerCard(p),
+            const SizedBox(height: 16),
+            _statsCard(p),
+            const SizedBox(height: 16),
+            _sectionTitle('عن مقدم الرعاية'),
+            const SizedBox(height: 8),
+            _aboutCard(p),
+            const SizedBox(height: 16),
+            _reviewsSection(p),
+          ],
+        ),
+        bottomNavigationBar: _bookBar(context, args),
+      ),
     );
   }
 }
