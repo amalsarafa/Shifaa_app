@@ -4,7 +4,6 @@ import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/screens/provider_profile_screen.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
 
-/// الوسائط اللي بتجي من شاشة الخدمات (ServicesScreen)
 class ServiceDetailsArgs {
   final ServiceItem service;
   final String categoryTitle;
@@ -23,7 +22,6 @@ class ServiceDetailsScreen extends StatefulWidget {
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
-  static const String _font = 'Cairo';
   static const Color _star = Color(0xFFFFB400);
   static const Color _border = Color(0xFFDDEBEB);
 
