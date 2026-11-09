@@ -24,14 +24,15 @@ class ServiceItem {
     this.providers = const [],
   });
 }
+
 class CareProvider {
   final String name;
   final String role;
   final double rating;
   final int yearsExp;
   final String image;
+  final String phone;
 
-  // الحقول الجديدة لشاشة الملف الشخصي
   final int reviewsCount;
   final int visitsDone;
   final String about;
@@ -44,6 +45,7 @@ class CareProvider {
     required this.rating,
     required this.yearsExp,
     required this.image,
+    this.phone = '',
     this.reviewsCount = 0,
     this.visitsDone = 0,
     this.about = '',

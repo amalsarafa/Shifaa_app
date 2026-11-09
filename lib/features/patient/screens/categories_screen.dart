@@ -5,9 +5,9 @@ import 'package:my_first_app/features/patient/services/service_models.dart';
 import 'package:my_first_app/features/patient/services/services_data.dart';
 
 class _CategoryItem {
-  final String description; 
+  final String description;
   final String icon;
-  final ServiceCategory category; 
+  final ServiceCategory category;
 
   const _CategoryItem({
     required this.description,
@@ -21,6 +21,7 @@ class _CategoryItem {
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
+  // تم حذف قسم "زيارة طبيب"
   static const List<_CategoryItem> _categories = [
     _CategoryItem(
       description: 'رعاية تمريضية متخصصة في منزلك.',
@@ -49,15 +50,6 @@ class CategoriesScreen extends StatelessWidget {
         services: labServices,
       ),
     ),
-    _CategoryItem(
-      description: 'أطباء مؤهلون يزورونك في المنزل.',
-      icon: 'assets/icons/doctor_visits.svg',
-      category: ServiceCategory(
-        title: 'زيارة طبيب',
-        subtitle: 'اختر نوع الزيارة التي تحتاجها.',
-        services: doctorServices,
-      ),
-    ),
   ];
 
   void _openCategory(BuildContext context, _CategoryItem item) {
@@ -65,7 +57,7 @@ class CategoriesScreen extends StatelessWidget {
   }
 
   Widget _header() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -76,7 +68,7 @@ class CategoriesScreen extends StatelessWidget {
             color: AppColors.primary800,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 8),
         Text(
           'اختاري الخدمة الصحية المنزلية التي تحتاجينها.',
           style: TextStyle(fontSize: 14, color: AppColors.neutralDark),
@@ -86,71 +78,76 @@ class CategoriesScreen extends StatelessWidget {
   }
 
   Widget _categoryCard(BuildContext context, _CategoryItem item) {
-    return GestureDetector(
-      onTap: () => _openCategory(context, item),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary500.withOpacity(0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      item.icon,
-                      width: 22,
-                      height: 22,
-                      colorFilter: ColorFilter.mode(
-                        AppColors.primary500,
-                        BlendMode.srcIn,
-                      ),
+    return Material(
+      color: AppColors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.primary500.withAlpha(77)),
+      ),
+      child: InkWell(
+        onTap: () => _openCategory(context, item),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    item.icon,
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.primary500,
+                      BlendMode.srcIn,
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.arrow_back_rounded,
-                  size: 16,
-                  color: AppColors.primary500,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.neutralDarkActive,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        height: 1.4,
+                        color: AppColors.neutralDark,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              item.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.3,
-                fontWeight: FontWeight.bold,
-                color: AppColors.neutralDarkActive,
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              item.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                height: 1.4,
-                color: AppColors.neutralDark,
+              const SizedBox(width: 8),
+              // chevron_left ثابت الاتجاه: يشير لليسار (اتجاه "التالي" في RTL)
+              const Icon(
+                Icons.chevron_left_rounded,
+                size: 24,
+                color: AppColors.primary500,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -164,23 +161,17 @@ class CategoriesScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 60, 20, 0),
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _header(),
-                const SizedBox(height: 27),
+                const SizedBox(height: 16),
                 Expanded(
-                  child: GridView.builder(
+                  child: ListView.separated(
                     padding: const EdgeInsets.only(bottom: 16),
                     itemCount: _categories.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          mainAxisExtent: 190,
-                        ),
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
                     itemBuilder: (context, i) =>
                         _categoryCard(context, _categories[i]),
                   ),

@@ -1,4 +1,3 @@
-
 import 'package:my_first_app/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
@@ -136,6 +135,42 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, color: AppColors.white),
           ),
+          // رقم هاتف مقدم الرعاية
+          if (p.phone.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary700,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.phone_rounded,
+                    size: 16,
+                    color: AppColors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'للتواصل:',
+                    style: TextStyle(fontSize: 13, color: AppColors.white),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    p.phone,
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -445,7 +480,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     );
   }
 
-  // ───────────────────────── زر الحجز (ثابت أسفل الشاشة) ─────────────────────────
   Widget _bookBar(BuildContext context, ProviderProfileArgs args) {
     return Container(
       decoration: const BoxDecoration(
@@ -458,14 +492,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           padding: const EdgeInsets.all(16),
           child: AppButton(
             text: 'احجز الآن',
-            onPressed: () => Navigator.pushNamed(context, 'BookService'),
+            onPressed: () =>
+                Navigator.pushNamed(context, 'BookService', arguments: args),
           ),
         ),
       ),
     );
   }
 
-  // ───────────────────────── البناء ─────────────────────────
   @override
   Widget build(BuildContext context) {
     final args =

@@ -1,7 +1,6 @@
 import 'service_models.dart';
 
 // ───────────────────────── مقدمو الرعاية ─────────────────────────
-// معرّفين مرة واحدة ومستخدمين بأكثر من خدمة، فأي تعديل بينعكس على الكل.
 
 const _sarah = CareProvider(
   name: 'سارة خليل',
@@ -9,6 +8,7 @@ const _sarah = CareProvider(
   rating: 4.9,
   yearsExp: 6,
   image: 'assets/images/patient/nurse_sarah.png',
+  phone: '+970 59 000 0001',
   reviewsCount: 20,
   visitsDone: 40,
   about:
@@ -42,6 +42,7 @@ const _ali = CareProvider(
   rating: 4.9,
   yearsExp: 5,
   image: 'assets/images/patient/nurse_ali.png',
+  phone: '+970 59 000 0002',
   reviewsCount: 20,
   visitsDone: 30,
   about:
@@ -87,6 +88,7 @@ const _lina = CareProvider(
   rating: 4.8,
   yearsExp: 3,
   image: 'assets/images/patient/nurse_lina.png',
+  phone: '+970 59 000 0002',
   reviewsCount: 5,
   visitsDone: 10,
   about:
@@ -115,7 +117,7 @@ const nursingServices = [
     title: 'الحقن',
     description: 'حقن آمنة ومعقمة.',
     duration: '15-30 د',
-    price: '\$25',
+    price: '\₪25',
     image: 'assets/images/patient/injections.png',
     rating: 4.8,
     reviewsCount: 100,
@@ -129,7 +131,7 @@ const nursingServices = [
     title: 'العناية بالجروح',
     description: 'تغيير الضمادات وعلاج الحروق.',
     duration: '30-45 د',
-    price: '\$40',
+    price: '\₪40',
     image: 'assets/images/patient/wound_care.png',
     rating: 4.7,
     reviewsCount: 64,
@@ -143,7 +145,7 @@ const nursingServices = [
     title: 'رعاية كبار السن',
     description: 'رعاية يومية ومرافقة.',
     duration: '30-45 د',
-    price: '\$40',
+    price: '\₪40',
     image: 'assets/images/patient/elderly_care.png',
     rating: 4.9,
     reviewsCount: 82,

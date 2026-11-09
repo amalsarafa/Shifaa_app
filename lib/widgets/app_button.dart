@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 
@@ -6,7 +5,7 @@ class AppButton extends StatelessWidget {
   final double? width;
   final double height;
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final IconData? icon;
 
   const AppButton({
@@ -45,10 +44,7 @@ class AppButton extends StatelessWidget {
             ],
             Text(
               text,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ],
         ),
