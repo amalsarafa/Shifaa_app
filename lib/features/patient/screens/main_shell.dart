@@ -5,6 +5,7 @@ import 'package:my_first_app/features/patient/screens/categories_screen.dart';
 import 'package:my_first_app/features/patient/screens/home_screen.dart';
 import 'package:my_first_app/features/patient/screens/personal_profile.dart';
 import 'package:my_first_app/widgets/bottom_nav_bar.dart';
+import 'package:my_first_app/core/theme/app_colors.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -20,13 +21,14 @@ class _MainShellState extends State<MainShell> {
   late final List<Widget> _pages = [
     HomeScreen(onGoToTab: (i) => setState(() => _currentIndex = i)),
     const CategoriesScreen(),
-    const BookingsScreen(),
+    BookingsScreen(onGoToTab: (i) => setState(() => _currentIndex = i)),
     const PersonalProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+        return Scaffold(
+      backgroundColor: AppColors.background,
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,

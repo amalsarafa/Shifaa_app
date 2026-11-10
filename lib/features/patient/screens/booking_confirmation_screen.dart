@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/screens/book_service_screen.dart'; // BookingDraft
+import 'package:my_first_app/features/patient/services/appointment_repository.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   const BookingConfirmationScreen({super.key});
@@ -71,18 +72,27 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   // ───────────────────────── الإرسال ─────────────────────────
-  Future<void> _send(BookingDraft draft) async {
+    Future<void> _send(BookingDraft draft) async {
     setState(() => _sending = true);
 
     // TODO: هنا لاحقاً إنشاء الحجز في Firebase (مع Transaction).
     // حالياً انتظار وهمي لمحاكاة الإرسال.
     await Future.delayed(const Duration(seconds: 1));
 
+    AppointmentRepository.add(
+      provider: draft.provider,
+      service: draft.service,
+      categoryTitle: draft.categoryTitle,
+      date: draft.date,
+      time: draft.time,
+      address: draft.address,
+      notes: draft.notes,
+    );
+
     if (!mounted) return;
     setState(() => _sending = false);
     await _showSuccess(draft);
   }
-
   Future<void> _showSuccess(BookingDraft draft) {
     return showModalBottomSheet<void>(
       context: context,

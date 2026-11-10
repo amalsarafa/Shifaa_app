@@ -24,6 +24,8 @@ class AppBottomNav extends StatelessWidget {
     required this.onTap,
   });
 
+  static const Color _border = Color(0xFFDDEBEB);
+
   static const List<_NavItem> _items = [
     _NavItem(
       label: 'الرئيسية',
@@ -50,45 +52,47 @@ class AppBottomNav extends StatelessWidget {
   Widget _navItem(int index) {
     final item = _items[index];
     final bool selected = index == currentIndex;
-    final Color color =
-        selected ? AppColors.primary800 : AppColors.neutralDark;
+    final Color color = selected ? AppColors.white : AppColors.neutralDark;
 
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => onTap(index),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
+        child: SizedBox(
+          height: 64,
+          child: Center(
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 64,
-              height: 32,
+              height: 64,
               decoration: BoxDecoration(
-                color: selected
-                    ? AppColors.primary500.withOpacity(0.25)
-                    : Colors.transparent,
+                color: selected ? AppColors.primary700 : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Center(
-                child: SvgPicture.asset(
-                  selected ? item.activeIcon : item.icon,
-                  width: 24,
-                  height: 24,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    selected ? item.activeIcon : item.icon,
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                      color: color,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                color: color,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -98,20 +102,19 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          border: Border(
-            top: BorderSide(color: AppColors.neutralNormal, width: 1),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: _border),
           ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-            child: Row(
-              children: List.generate(_items.length, _navItem),
-            ),
+          child: Row(
+            children: List.generate(_items.length, _navItem),
           ),
         ),
       ),

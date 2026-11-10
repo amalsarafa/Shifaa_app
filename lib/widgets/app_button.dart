@@ -7,6 +7,10 @@ class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final double fontSize;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color? borderColor;
 
   const AppButton({
     super.key,
@@ -15,6 +19,10 @@ class AppButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.icon,
+    this.fontSize = 17,
+    this.backgroundColor = AppColors.primary600,
+    this.foregroundColor = AppColors.white,
+    this.borderColor,
   });
 
   @override
@@ -25,10 +33,11 @@ class AppButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary600,
-          foregroundColor: AppColors.white,
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16),
+          side: borderColor == null ? null : BorderSide(color: borderColor!),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -44,7 +53,10 @@ class AppButton extends StatelessWidget {
             ],
             Text(
               text,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

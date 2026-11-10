@@ -5,8 +5,6 @@ import 'package:my_first_app/features/splash/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -48,9 +46,22 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         fontFamily: GoogleFonts.cairo().fontFamily,
       ),
-      home:SplashScreen(),
+      home: SplashScreen(),
       //NotificationsScreen(),
       routes: AppRoutes.routes,
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: mediaQuery.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.1,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

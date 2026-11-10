@@ -21,6 +21,8 @@ class _CategoryItem {
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
+  static const Color _border = Color(0xFFDDEBEB);
+
   // تم حذف قسم "زيارة طبيب"
   static const List<_CategoryItem> _categories = [
     _CategoryItem(
@@ -56,6 +58,14 @@ class CategoriesScreen extends StatelessWidget {
     Navigator.pushNamed(context, 'Services', arguments: item.category);
   }
 
+  /// صيغة عربية صحيحة للعدد: خدمة واحدة / خدمتان / 3-10 خدمات / 11+ خدمة
+  String _countLabel(int n) {
+    if (n == 1) return 'خدمة واحدة';
+    if (n == 2) return 'خدمتان';
+    if (n <= 10) return '$n خدمات';
+    return '$n خدمة';
+  }
+
   Widget _header() {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,88 +73,131 @@ class CategoriesScreen extends StatelessWidget {
         Text(
           'الخدمات',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: AppColors.primary800,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 4),
         Text(
-          'اختاري الخدمة الصحية المنزلية التي تحتاجينها.',
+          'اختر القسم المناسب، وسيصلك مقدم الرعاية إلى منزلك.',
           style: TextStyle(fontSize: 14, color: AppColors.neutralDark),
         ),
       ],
     );
   }
 
-  Widget _categoryCard(BuildContext context, _CategoryItem item) {
+  Widget _countChip(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primary50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        _countLabel(count),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary800,
+        ),
+      ),
+    );
+  }
+
+   Widget _browseLink() {
+    return const Text(
+      'تصفح الخدمات',
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.primary600,
+      ),
+    );
+  }
+
+   Widget _categoryCard(BuildContext context, _CategoryItem item) {
+    final count = item.category.services.length;
+
     return Material(
       color: AppColors.white,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.primary500.withAlpha(77)),
+        side: const BorderSide(color: _border),
       ),
       child: InkWell(
         onTap: () => _openCategory(context, item),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    item.icon,
-                    width: 24,
-                    height: 24,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.primary500,
-                      BlendMode.srcIn,
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        item.icon,
+                        width: 28,
+                        height: 28,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.primary500,
+                          BlendMode.srcIn,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.neutralDarkActive,
-                      ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.neutralDarkActive,
+                                ),
+                              ),
+                            ),
+                            if (count > 0) ...[
+                              const SizedBox(width: 8),
+                              _countChip(count),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: AppColors.neutralDark,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        height: 1.4,
-                        color: AppColors.neutralDark,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              // chevron_left ثابت الاتجاه: يشير لليسار (اتجاه "التالي" في RTL)
-              const Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: AppColors.primary500,
+              const SizedBox(height: 16),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: _browseLink(),
               ),
             ],
           ),
@@ -166,7 +219,7 @@ class CategoriesScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _header(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.only(bottom: 16),

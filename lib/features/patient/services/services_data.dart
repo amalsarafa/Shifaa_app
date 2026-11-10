@@ -88,7 +88,7 @@ const _lina = CareProvider(
   rating: 4.8,
   yearsExp: 3,
   image: 'assets/images/patient/nurse_lina.png',
-  phone: '+970 59 000 0002',
+  phone: '+970 59 000 0003',
   reviewsCount: 5,
   visitsDone: 10,
   about:
