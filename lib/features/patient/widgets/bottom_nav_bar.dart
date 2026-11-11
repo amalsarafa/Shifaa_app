@@ -24,7 +24,7 @@ class AppBottomNav extends StatelessWidget {
     required this.onTap,
   });
 
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _border = AppColors.border;
 
   static const List<_NavItem> _items = [
     _NavItem(

@@ -22,8 +22,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  static const Color _border = Color(0xFFDDEBEB);
-  static const Color _star = Color(0xFFFFB400);
+  static const Color _border = AppColors.border;
+  static const Color _star = AppColors.star;
 
   // أرقام التبويبات في الشريط السفلي
   static const int _servicesTab = 1;

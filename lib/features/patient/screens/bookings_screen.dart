@@ -17,8 +17,8 @@ class BookingsScreen extends StatefulWidget {
 }
 
 class _BookingsScreenState extends State<BookingsScreen> {
-  static const Color _border = Color(0xFFDDEBEB);
-  static const Color _star = Color(0xFFFFB400);
+  static const Color _border = AppColors.border;
+  static const Color _star = AppColors.star;
 
   static const _tabs = <String>['الحالية', 'المكتملة', 'الملغاة'];
 
@@ -540,8 +540,8 @@ class _RateVisitSheet extends StatefulWidget {
 }
 
 class _RateVisitSheetState extends State<_RateVisitSheet> {
-  static const Color _border = Color(0xFFDDEBEB);
-  static const Color _star = Color(0xFFFFB400);
+  static const Color _border = AppColors.border;
+  static const Color _star = AppColors.star;
 
   final _commentCtrl = TextEditingController();
   int _rating = 0;

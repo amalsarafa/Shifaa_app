@@ -70,9 +70,9 @@ class AppointmentCard extends StatelessWidget {
     this.onTap,
   });
 
-  static const Color _border = Color(0xFFDDEBEB);
-  static const Color _pendingBg = Color(0xFFFFF0CC);
-  static const Color _pendingText = Color(0xFF6B4700);
+  static const Color _border = AppColors.border;
+  static const Color _pendingBg = AppColors.warningLight;
+  static const Color _pendingText = AppColors.warningDark;
 
   String _initial(String name) {
     final n = name.trim();

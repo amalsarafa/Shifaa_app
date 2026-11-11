@@ -6,8 +6,11 @@ import 'package:my_first_app/features/splash/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // قفل الشاشة على الوضع العمودي فقط
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -48,7 +51,6 @@ class _MyAppState extends State<MyApp> {
         scaffoldBackgroundColor: AppColors.background,
       ),
       home: SplashScreen(),
-      //NotificationsScreen(),
       routes: AppRoutes.routes,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);

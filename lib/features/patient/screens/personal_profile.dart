@@ -4,19 +4,14 @@ import 'package:my_first_app/core/routes/app_routes.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
+import 'package:my_first_app/features/patient/widgets/patient_avatar.dart';
 
 class PersonalProfileScreen extends StatelessWidget {
   const PersonalProfileScreen({super.key});
 
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _border = AppColors.border;
 
   // ───────────────────────── مساعدات ─────────────────────────
-  String _initial(String name) {
-    final n = name.trim();
-    return n.isEmpty ? '?' : n[0];
-  }
-
-  /// يفتح الصفحة إذا كان مسارها موجوداً، وإلا يعرض رسالة مؤقتة
   void _open(BuildContext context, String route) {
     if (AppRoutes.routes.containsKey(route)) {
       Navigator.pushNamed(context, route);
@@ -41,23 +36,10 @@ class PersonalProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.primary50,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary200, width: 2),
-            ),
-            child: Text(
-              _initial(patient.name),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary700,
-              ),
-            ),
+          PatientAvatar(
+            name: patient.name,
+            photo: patient.photo,
+            size: 64,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -105,11 +87,13 @@ class PersonalProfileScreen extends StatelessWidget {
   }
 
   // ───────────────────────── القائمة ─────────────────────────
+  /// danger: true ← صف أحمر بدون سهم (لتسجيل الخروج)
   Widget _row({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     Widget? trailing,
+    bool danger = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -123,29 +107,36 @@ class PersonalProfileScreen extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary50,
+                  color: danger ? AppColors.error50 : AppColors.primary50,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: AppColors.primary600),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: danger ? AppColors.error700 : AppColors.primary600,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.neutralDarkActive,
+                    color: danger
+                        ? AppColors.error700
+                        : AppColors.neutralDarkActive,
                   ),
                 ),
               ),
               if (trailing != null) ...[trailing, const SizedBox(width: 8)],
-              // chevron_left ثابت الاتجاه: يشير لليسار (اتجاه "التالي" في RTL)
-              const Icon(
-                Icons.chevron_left_rounded,
-                size: 20,
-                color: AppColors.neutralDark,
-              ),
+              // chevron_right ينقلب تلقائياً في RTL فيشير لليسار
+              if (!danger)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.neutralDark,
+                ),
             ],
           ),
         ),
@@ -168,24 +159,6 @@ class PersonalProfileScreen extends StatelessWidget {
             rows[i],
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _countChip(int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.primary50,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        '$count',
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary800,
-        ),
       ),
     );
   }
@@ -233,7 +206,7 @@ class PersonalProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'يمكنك الدخول مرة أخرى في أي وقت برقم هاتفك.',
+                  'هل أنت متأكد من تسجيل الخروج من الحساب.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -244,11 +217,14 @@ class PersonalProfileScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(
+                                        Expanded(
                       child: AppButton(
                         height: 44,
                         fontSize: 13,
                         text: 'تراجع',
+                        backgroundColor: AppColors.white,
+                        foregroundColor: AppColors.neutralDarkActive,
+                        borderColor: AppColors.border,
                         onPressed: () => Navigator.pop(dialogContext, false),
                       ),
                     ),
@@ -258,9 +234,8 @@ class PersonalProfileScreen extends StatelessWidget {
                         height: 44,
                         fontSize: 13,
                         text: 'تسجيل الخروج',
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.error700,
-                        borderColor: AppColors.error100,
+                        backgroundColor: AppColors.error700,
+                        foregroundColor: AppColors.white,
                         onPressed: () => Navigator.pop(dialogContext, true),
                       ),
                     ),
@@ -292,7 +267,7 @@ class PersonalProfileScreen extends StatelessWidget {
           centerTitle: true,
           automaticallyImplyLeading: false,
           title: const Text(
-            'حسابي',
+            'حسابي الشخصي',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -316,8 +291,7 @@ class PersonalProfileScreen extends StatelessWidget {
                   ),
                   _row(
                     icon: Icons.location_on_outlined,
-                    label: 'عناويني',
-                    trailing: _countChip(patient.addresses.length),
+                    label: 'العناوين المحفوظة',
                     onTap: () => _open(context, 'Addresses'),
                   ),
                   _row(
@@ -326,27 +300,30 @@ class PersonalProfileScreen extends StatelessWidget {
                     onTap: () => _open(context, 'MedicalRecord'),
                   ),
                   _row(
+                    icon: Icons.history_rounded,
+                    label: 'سجل الزيارات',
+                    onTap: () => _open(context, 'VisitHistory'),
+                  ),
+                  _row(
                     icon: Icons.settings_outlined,
                     label: 'الإعدادات',
                     onTap: () => _open(context, 'Settings'),
                   ),
                   _row(
                     icon: Icons.help_outline_rounded,
-                    label: 'المساعدة والتواصل',
+                    label: 'الدعم والمساعدة',
                     onTap: () => _open(context, 'Help'),
                   ),
                 ]),
                 const SizedBox(height: 24),
-                AppButton(
-                  height: 52,
-                  fontSize: 14,
-                  icon: Icons.logout_rounded,
-                  text: 'تسجيل الخروج',
-                  backgroundColor: AppColors.white,
-                  foregroundColor: AppColors.error700,
-                  borderColor: AppColors.error100,
-                  onPressed: () => _confirmLogout(context),
-                ),
+                _menuCard([
+                  _row(
+                    icon: Icons.logout_rounded,
+                    label: 'تسجيل الخروج',
+                    danger: true,
+                    onTap: () => _confirmLogout(context),
+                  ),
+                ]),
               ],
             );
           },

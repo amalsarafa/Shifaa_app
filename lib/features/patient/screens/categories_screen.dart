@@ -21,7 +21,7 @@ class CategoryItem {
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _border = AppColors.border;
 
   // تم حذف قسم "زيارة طبيب"
   static const List<CategoryItem> categories = [

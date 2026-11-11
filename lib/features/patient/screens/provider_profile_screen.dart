@@ -27,8 +27,8 @@ class ProviderProfileScreen extends StatefulWidget {
 }
 
 class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
-  static const Color _star = Color(0xFFFFB400);
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _star = AppColors.star;
+  static const Color _border = AppColors.border;
 
   /// عدد التقييمات الظاهرة قبل الضغط على "عرض الكل"
   static const int _previewReviews = 2;

@@ -22,8 +22,8 @@ class ServiceDetailsScreen extends StatefulWidget {
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
-  static const Color _star = Color(0xFFFFB400);
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _star = AppColors.star;
+  static const Color _border = AppColors.border;
 
   // الفلاتر: الكل / الأعلى تقييماً / الأقرب / متاح الآن
   static const _filters = <({String label, IconData? icon})>[

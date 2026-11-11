@@ -12,7 +12,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _border = AppColors.primary50;
 
   Timer? _timer;
 
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 96,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.primary50,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: _border),
                 ),

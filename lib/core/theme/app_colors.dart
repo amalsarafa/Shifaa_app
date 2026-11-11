@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
   // background Color
-    static const background =  Color(0xFFF6FAFA);
-
+  static const background =  Color(0xFFF6FAFA);
+  static const border       = Color(0xFFDDEBEB); // إطار البطاقات والحقول
+  static const star         = Color(0xFFFFB400); // نجوم التقييم
+  static const warningLight = Color(0xFFFFF0CC); // خلفية "قيد الانتظار"
+  static const warningDark  = Color(0xFF6B4700); // نص "قيد الانتظار"
   // Primary
   static const primary50 =  Color(0xFFEBF7F6);
   static const primary100 = Color(0xFFC2E6E4);

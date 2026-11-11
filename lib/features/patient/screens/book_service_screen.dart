@@ -4,6 +4,7 @@ import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/screens/provider_profile_screen.dart';
 import 'package:my_first_app/features/patient/services/address_model.dart';
 import 'package:my_first_app/features/patient/services/availability_repository.dart';
+import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
@@ -37,9 +38,9 @@ class BookServiceScreen extends StatefulWidget {
 
 class _BookServiceScreenState extends State<BookServiceScreen> {
   static const String _font = 'Cairo';
-  static const Color _border = Color(0xFFDDEBEB);
-  static const Color _disabledBg = Color(0xFFF0F4F4);
-  static const Color _disabledText =AppColors.neutralNormal;
+  static const Color _border = AppColors.border;
+  static const Color _disabledBg = AppColors.neutralLight;
+  static const Color _disabledText = AppColors.neutralNormal;
 
   /// عدد الأيام المعروضة (نافذة الحجز)
   static const int _daysCount = 7;
@@ -69,21 +70,6 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
     'ديسمبر',
   ];
 
-  // عناوين تجريبية، لاحقاً من حساب المريض
-  // (قائمة عادية مش const عشان نقدر نضيف عليها عنوان جديد)
-  final List<Address> _addresses = [
-    const Address(
-      title: 'مدينة غزة، حي الرمال',
-      details: 'الشارع الرئيسي، بناية 12',
-      areaId: 'rimal',
-    ),
-    const Address(
-      title: 'مدينة غزة، حي النصر',
-      details: 'شارع النصر، بناية 5',
-      areaId: 'nasr',
-    ),
-  ];
-
   final _notesCtrl = TextEditingController();
   final Map<DateTime, List<TimeSlot>> _slots = {};
 
@@ -93,7 +79,9 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
 
   DateTime? _selectedDay;
   String? _selectedTime;
-  late Address _address = _addresses.first;
+
+  /// يبدأ بالعنوان الافتراضي للمريض
+  late Address _address = PatientRepository.current.value.address;
 
   @override
   void didChangeDependencies() {
@@ -173,6 +161,10 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
 
   // ───────────────────────── اختيار / إضافة عنوان ─────────────────────────
   Future<void> _pickAddress() async {
+    // العناوين المحفوظة للمريض
+    final addresses = PatientRepository.current.value.addresses;
+    final canAdd = addresses.length < PatientRepository.maxAddresses;
+
     final picked = await showModalBottomSheet<Address>(
       context: context,
       isScrollControlled: true,
@@ -193,8 +185,8 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
-                    children: _addresses.map((a) {
-                      final selected = identical(a, _address);
+                    children: addresses.map((a) {
+                      final selected = a.id == _address.id;
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: Icon(
@@ -223,23 +215,26 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
                     }).toList(),
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _addAddress();
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary700,
-                    minimumSize: const Size(44, 44),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                if (canAdd) ...[
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _addAddress();
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary700,
+                      minimumSize: const Size(44, 44),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    icon: const Icon(Icons.add_location_alt_outlined, size: 20),
+                    label: const Text(
+                      'إضافة عنوان جديد',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
                   ),
-                  icon: const Icon(Icons.add_location_alt_outlined, size: 20),
-                  label: const Text(
-                    'إضافة عنوان جديد',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -249,22 +244,14 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
     if (picked != null) setState(() => _address = picked);
   }
 
+  /// يفتح صفحة "إضافة عنوان"، وبعد الحفظ يختار العنوان الجديد
   Future<void> _addAddress() async {
-    final created = await showModalBottomSheet<Address>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => _sheetShell(const _AddAddressSheet()),
-    );
-    if (created != null && mounted) {
-      setState(() {
-        _addresses.add(created);
-        _address = created;
-      });
-    }
+    final before = PatientRepository.current.value.addresses.length;
+    await Navigator.pushNamed(context, 'AddAddress');
+    if (!mounted) return;
+
+    final list = PatientRepository.current.value.addresses;
+    if (list.length > before) setState(() => _address = list.last);
   }
 
   // ───────────────────────── عناصر مشتركة ─────────────────────────
@@ -868,128 +855,6 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
             ],
           ),
           bottomNavigationBar: _bottomBar(),
-        ),
-      ),
-    );
-  }
-}
-
-// ───────────────────────── نموذج إضافة عنوان جديد ─────────────────────────
-class _AddAddressSheet extends StatefulWidget {
-  const _AddAddressSheet();
-
-  @override
-  State<_AddAddressSheet> createState() => _AddAddressSheetState();
-}
-
-class _AddAddressSheetState extends State<_AddAddressSheet> {
-  static const Color _border = Color(0xFFDDEBEB);
-
-  final _titleCtrl = TextEditingController();
-  final _detailsCtrl = TextEditingController();
-
-  bool get _valid =>
-      _titleCtrl.text.trim().isNotEmpty && _detailsCtrl.text.trim().isNotEmpty;
-
-  @override
-  void dispose() {
-    _titleCtrl.dispose();
-    _detailsCtrl.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    Navigator.pop(
-      context,
-      Address(
-        title: _titleCtrl.text.trim(),
-        details: _detailsCtrl.text.trim(),
-        areaId: 'custom', // لاحقاً: من الخريطة / اختيار المنطقة
-      ),
-    );
-  }
-
-  InputDecoration _decoration(String hint) {
-    OutlineInputBorder border(Color c) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: c),
-    );
-
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 13, color: AppColors.neutralDark),
-      filled: true,
-      fillColor: AppColors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: border(_border),
-      enabledBorder: border(_border),
-      focusedBorder: border(AppColors.primary500),
-    );
-  }
-
-  Widget _label(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: AppColors.neutralDarkActive,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'إضافة عنوان جديد',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.neutralDarkActive,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _label('المدينة / الحي'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _titleCtrl,
-                textInputAction: TextInputAction.next,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.neutralDarkActive,
-                ),
-                decoration: _decoration('مثال: مدينة غزة، حي الرمال'),
-              ),
-              const SizedBox(height: 16),
-              _label('تفاصيل العنوان'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _detailsCtrl,
-                maxLines: 2,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.neutralDarkActive,
-                ),
-                decoration: _decoration('الشارع، رقم البناية، أقرب معلم'),
-              ),
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'حفظ العنوان',
-                onPressed: _valid ? _save : null,
-              ),
-            ],
-          ),
         ),
       ),
     );

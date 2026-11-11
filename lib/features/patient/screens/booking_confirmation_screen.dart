@@ -15,7 +15,7 @@ class BookingConfirmationScreen extends StatefulWidget {
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   static const String _font = 'Cairo';
-  static const Color _border = Color(0xFFDDEBEB);
+  static const Color _border = AppColors.border;
 
   // DateTime.weekday: 1 = الاثنين ... 7 = الأحد
   static const _dayNames = <String>[
