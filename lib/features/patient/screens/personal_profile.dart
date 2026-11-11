@@ -221,7 +221,7 @@ class PersonalProfileScreen extends StatelessWidget {
                       child: AppButton(
                         height: 44,
                         fontSize: 13,
-                        text: 'تراجع',
+                        text: 'إلغاء',
                         backgroundColor: AppColors.white,
                         foregroundColor: AppColors.neutralDarkActive,
                         borderColor: AppColors.border,

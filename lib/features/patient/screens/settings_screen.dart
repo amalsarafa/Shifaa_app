@@ -17,86 +17,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const String _appVersion = '1.0.0';
 
   // ───────────────────────── حذف الحساب ─────────────────────────
-  Future<void> _confirmDelete() async {
+    Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Dialog(
-          backgroundColor: AppColors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 32),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: AppColors.error50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    size: 28,
-                    color: AppColors.error700,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'تأكيد الحذف',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.neutralDarkActive,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'هل أنت متأكد من حذف الحساب؟',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.6,
-                    color: AppColors.neutralDark,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                                        Expanded(
-                      child: AppButton(
-                        height: 44,
-                        fontSize: 13,
-                        text: 'إلغاء',
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.neutralDarkActive,
-                        borderColor: AppColors.border,
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: AppButton(
-                        height: 44,
-                        fontSize: 13,
-                        text: 'حذف الحساب',
-                        backgroundColor: AppColors.error700,
-                        foregroundColor: AppColors.white,
-                        onPressed: () => Navigator.pop(dialogContext, true),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      builder: (_) => const _DeleteAccountDialog(),
     );
 
     if (confirmed != true || !mounted) return;
@@ -294,6 +218,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+// ───────────────────────── نافذة تأكيد حذف الحساب ─────────────────────────
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  static const String _confirmWord = 'حذف';
+
+  final TextEditingController _controller = TextEditingController();
+
+  bool get _canDelete => _controller.text.trim() == _confirmWord;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  OutlineInputBorder _border(Color color) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Dialog(
+        backgroundColor: AppColors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: AppColors.error50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 28,
+                  color: AppColors.error700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'تأكيد الحذف',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.neutralDarkActive,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'هل أنت متأكد من حذف الحساب؟\nاكتب كلمة "حذف" للتأكيد.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.6,
+                  color: AppColors.neutralDark,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _controller,
+                onChanged: (_) => setState(() {}),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.neutralDarkActive,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'حذف',
+                  hintStyle: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.neutralDark,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  border: _border(AppColors.border),
+                  enabledBorder: _border(AppColors.border),
+                  focusedBorder: _border(AppColors.primary600),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      height: 44,
+                      fontSize: 13,
+                      text: 'إلغاء',
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.neutralDarkActive,
+                      borderColor: AppColors.border,
+                      onPressed: () => Navigator.pop(context, false),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AppButton(
+                      height: 44,
+                      fontSize: 13,
+                      text: 'حذف الحساب',
+                      backgroundColor:
+                          _canDelete ? AppColors.error700 : AppColors.neutralLight,
+                      foregroundColor:
+                          _canDelete ? AppColors.white : AppColors.neutralDark,
+                      onPressed: () {
+                        if (_canDelete) Navigator.pop(context, true);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
