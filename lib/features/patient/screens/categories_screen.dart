@@ -4,12 +4,12 @@ import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
 import 'package:my_first_app/features/patient/services/services_data.dart';
 
-class _CategoryItem {
+class CategoryItem {
   final String description;
   final String icon;
   final ServiceCategory category;
 
-  const _CategoryItem({
+  const CategoryItem({
     required this.description,
     required this.icon,
     required this.category,
@@ -24,8 +24,8 @@ class CategoriesScreen extends StatelessWidget {
   static const Color _border = Color(0xFFDDEBEB);
 
   // تم حذف قسم "زيارة طبيب"
-  static const List<_CategoryItem> _categories = [
-    _CategoryItem(
+  static const List<CategoryItem> categories = [
+    CategoryItem(
       description: 'رعاية تمريضية متخصصة في منزلك.',
       icon: 'assets/icons/nursing.svg',
       category: ServiceCategory(
@@ -34,7 +34,7 @@ class CategoriesScreen extends StatelessWidget {
         services: nursingServices,
       ),
     ),
-    _CategoryItem(
+    CategoryItem(
       description: 'تأهيل وعلاج طبيعي في المنزل.',
       icon: 'assets/icons/physiotherapy.svg',
       category: ServiceCategory(
@@ -43,7 +43,7 @@ class CategoriesScreen extends StatelessWidget {
         services: physioServices,
       ),
     ),
-    _CategoryItem(
+    CategoryItem(
       description: 'فحوصات وسحب عينات في منزلك.',
       icon: 'assets/icons/lab_tests.svg',
       category: ServiceCategory(
@@ -54,7 +54,7 @@ class CategoriesScreen extends StatelessWidget {
     ),
   ];
 
-  void _openCategory(BuildContext context, _CategoryItem item) {
+  void _openCategory(BuildContext context, CategoryItem item) {
     Navigator.pushNamed(context, 'Services', arguments: item.category);
   }
 
@@ -116,7 +116,7 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-   Widget _categoryCard(BuildContext context, _CategoryItem item) {
+   Widget _categoryCard(BuildContext context, CategoryItem item) {
     final count = item.category.services.length;
 
     return Material(
@@ -223,10 +223,10 @@ class CategoriesScreen extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: _categories.length,
+                    itemCount: categories.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 16),
                     itemBuilder: (context, i) =>
-                        _categoryCard(context, _categories[i]),
+                        _categoryCard(context, categories[i]),
                   ),
                 ),
               ],

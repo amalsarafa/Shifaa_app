@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
-import 'package:my_first_app/widgets/app_button.dart';
+import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
 
                 Text(
-                  'مرحباً بك في شِفاء',
+                  'مرحباً بك في شفاء',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,

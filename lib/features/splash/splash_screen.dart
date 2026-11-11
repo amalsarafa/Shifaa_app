@@ -12,6 +12,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  static const Color _border = Color(0xFFDDEBEB);
+
   Timer? _timer;
 
   @override
@@ -20,44 +22,69 @@ class _SplashScreenState extends State<SplashScreen> {
 
     _timer = Timer(const Duration(seconds: 4), () {
       if (!mounted) return;
-
       Navigator.pushReplacementNamed(context, 'Onboarding');
     });
   }
 
   @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary50,
+      backgroundColor: AppColors.background,
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset('assets/images/logo.svg', width: 55, height: 55),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'شِفاء',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary800,
+        // ظهور تدريجي خفيف للشعار والنص
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOut,
+          builder: (context, value, child) => Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.9 + 0.1 * value, child: child),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: _border),
+                ),
+                child: SvgPicture.asset(
+                  'assets/images/logo.svg',
+                  width: 56,
+                  height: 56,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 3),
-
-            Text(
-              'خدمات الرعاية الصحية المنزلية',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary500,
+              const SizedBox(height: 16),
+              const Text(
+                'شفاء',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary800,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              const Text(
+                'خدمات الرعاية الصحية المنزلية',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

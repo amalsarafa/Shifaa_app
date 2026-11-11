@@ -1,17 +1,21 @@
-import 'package:my_first_app/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
+import 'package:my_first_app/features/patient/widgets/app_button.dart';
+import 'package:my_first_app/features/patient/screens/categories_screen.dart';
 
 class ProviderProfileArgs {
   final CareProvider provider;
   final ServiceItem service;
   final String categoryTitle;
 
+  final bool serviceSelected;
+
   const ProviderProfileArgs({
     required this.provider,
     required this.service,
     required this.categoryTitle,
+    this.serviceSelected = true,
   });
 }
 
@@ -480,7 +484,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     );
   }
 
-  Widget _bookBar(BuildContext context, ProviderProfileArgs args) {
+    Widget _bookBar(BuildContext context, ProviderProfileArgs args) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
@@ -492,12 +496,137 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           padding: const EdgeInsets.all(16),
           child: AppButton(
             text: 'احجز الآن',
-            onPressed: () =>
-                Navigator.pushNamed(context, 'BookService', arguments: args),
+            onPressed: () => args.serviceSelected
+                ? Navigator.pushNamed(context, 'BookService', arguments: args)
+                : _chooseService(context, args.provider),
           ),
         ),
       ),
     );
+  }
+
+  /// كل الخدمات التي يقدمها مقدم الرعاية، مع اسم القسم
+  List<ProviderProfileArgs> _providerServices(CareProvider p) {
+    final result = <ProviderProfileArgs>[];
+    for (final c in CategoriesScreen.categories) {
+      for (final s in c.category.services) {
+        if (s.providers.any((x) => x.name == p.name)) {
+          result.add(
+            ProviderProfileArgs(provider: p, service: s, categoryTitle: c.title),
+          );
+        }
+      }
+    }
+    return result;
+  }
+
+  Future<void> _chooseService(BuildContext context, CareProvider p) async {
+    final options = _providerServices(p);
+
+    final chosen = await showDialog<ProviderProfileArgs>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          backgroundColor: AppColors.white,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'اختر الخدمة',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.neutralDarkActive,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'الخدمات التي يقدمها ${p.name}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.neutralDark,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...options.map(
+                  (o) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Material(
+                      color: AppColors.white,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: _border),
+                      ),
+                      child: InkWell(
+                        onTap: () => Navigator.pop(dialogContext, o),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      o.service.title,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.neutralDarkActive,
+                                      ),
+                                    ),
+                                    Text(
+                                      o.categoryTitle,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.neutralDark,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                o.service.price,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary700,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.chevron_left_rounded,
+                                size: 20,
+                                color: AppColors.primary600,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (chosen == null || !context.mounted) return;
+    Navigator.pushNamed(context, 'BookService', arguments: chosen);
   }
 
   @override

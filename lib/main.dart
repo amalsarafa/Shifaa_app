@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_first_app/core/routes/app_routes.dart';
+import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/splash/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarColor: AppColors.background,
       systemNavigationBarDividerColor: Colors.transparent, // يلغي الخط الفاصل
       systemNavigationBarIconBrightness: Brightness.dark,
       systemNavigationBarContrastEnforced: false, // يلغي التعتيم التلقائي
@@ -45,6 +45,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: GoogleFonts.cairo().fontFamily,
+        scaffoldBackgroundColor: AppColors.background,
       ),
       home: SplashScreen(),
       //NotificationsScreen(),

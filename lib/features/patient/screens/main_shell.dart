@@ -4,8 +4,8 @@ import 'package:my_first_app/features/patient/screens/bookings_screen.dart';
 import 'package:my_first_app/features/patient/screens/categories_screen.dart';
 import 'package:my_first_app/features/patient/screens/home_screen.dart';
 import 'package:my_first_app/features/patient/screens/personal_profile.dart';
-import 'package:my_first_app/widgets/bottom_nav_bar.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/patient/widgets/bottom_nav_bar.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
