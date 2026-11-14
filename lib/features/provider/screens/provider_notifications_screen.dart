@@ -166,14 +166,15 @@ class _ProviderNotificationsScreenState
         children: [
           Align(
             alignment: AlignmentDirectional.centerStart,
-            child: IconButton(
+               child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              color: AppColors.neutralDarkActive,
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
           ),
           const Text(
             'الإشعارات',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           if (_unreadCount > 0)
             Align(
@@ -276,7 +277,7 @@ class _NotificationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

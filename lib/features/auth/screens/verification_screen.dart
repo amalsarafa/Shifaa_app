@@ -95,7 +95,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _state == _VerifyState.error ? AppColors.error500 : AppColors.primary500;
 
   Color get _haloColor => _state == _VerifyState.error
-      ? AppColors.error500.withOpacity(0.08)
+      ? AppColors.error500.withValues(alpha: 0.08)
       : AppColors.primary50;
 
   Widget _header() {
@@ -108,7 +108,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             alignment: AlignmentDirectional.centerStart,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
           ),
           const Text(
@@ -197,7 +197,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     if (_state == _VerifyState.error) {
       border = AppColors.error500;
-      fill = AppColors.error500.withOpacity(0.06);
+      fill = AppColors.error500.withValues(alpha: 0.06);
       textColor = AppColors.error500;
     } else if (_state == _VerifyState.success) {
       border = AppColors.primary500;

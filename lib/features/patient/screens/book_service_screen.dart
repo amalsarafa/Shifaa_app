@@ -299,7 +299,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
           p.image,
           fit: BoxFit.cover,
           cacheWidth: 100,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             color: AppColors.primary50,
             alignment: Alignment.center,
             child: Text(
@@ -516,7 +516,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _days.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) => _dayCard(_days[i]),
           ),
         ),

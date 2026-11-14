@@ -285,7 +285,7 @@ class ProviderPatientProfileScreen extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: ValueListenableBuilder<List<ProviderAppointment>>(
         valueListenable: ProviderAppointmentRepository.appointments,
-        builder: (context, _, __) {
+        builder: (context, _, _) {
           final p = ProviderPatientsRepository.byId(id);
 
           if (p == null) {

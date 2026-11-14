@@ -115,10 +115,10 @@ class _ServiceCard extends StatelessWidget {
                   width: 84,
                   height: 84,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: 84,
                     height: 84,
-                    color: const Color(0xFFE8EFEF),
+                    color: AppColors.neutralLight,
                     child: const Icon(Icons.image_outlined),
                   ),
                 ),

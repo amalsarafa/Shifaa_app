@@ -264,7 +264,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           p.image,
           cacheWidth: 200,
           fit: BoxFit.cover,
-          errorBuilder: (_, error, __) {
+          errorBuilder: (_, error, _) {
             debugPrint('Provider image error: ${p.image} → $error');
             return Container(
               color: AppColors.primary50,

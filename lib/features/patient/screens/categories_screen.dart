@@ -223,7 +223,7 @@ class CategoriesScreen extends StatelessWidget {
                   child: ListView.separated(
                     padding: const EdgeInsets.only(bottom: 16),
                     itemCount: categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
                     itemBuilder: (context, i) =>
                         _categoryCard(context, categories[i]),
                   ),

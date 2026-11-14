@@ -44,14 +44,14 @@ class PatientAvatar extends StatelessWidget {
         p,
         fit: BoxFit.cover,
         cacheWidth: cache,
-        errorBuilder: (_, __, ___) => _initial(),
+        errorBuilder: (_, _, _) => _initial(),
       );
     }
     return Image.file(
       File(p),
       fit: BoxFit.cover,
       cacheWidth: cache,
-      errorBuilder: (_, __, ___) => _initial(),
+      errorBuilder: (_, _, _) => _initial(),
     );
   }
 

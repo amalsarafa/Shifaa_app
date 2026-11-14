@@ -20,8 +20,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
   static const List<_PolicySection> _sections = [
     _PolicySection(
       title: '1. مقدمة',
-      text:
-          'نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية والصحية. توضّح هذه السياسة أي بيانات نجمعها، وكيف نستخدمها ونحميها عند استخدامك تطبيق شفاء.',
+      text: 'نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية والصحية. توضّح هذه السياسة أي بيانات نجمعها، وكيف نستخدمها ونحميها عند استخدامك تطبيق شفاء.',
     ),
     _PolicySection(
       title: '2. البيانات التي نجمعها',
@@ -43,13 +42,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
     ),
     _PolicySection(
       title: '4. مشاركة البيانات',
-      text:
-          'لا نبيع بياناتك ولا نشاركها مع أي جهة إعلانية. تُشارَك بياناتك الضرورية فقط مع مقدم الرعاية المعيَّن لك بالقدر اللازم لتقديم الخدمة، أو عندما يطلب القانون ذلك.',
+      text: 'لا نبيع بياناتك ولا نشاركها مع أي جهة إعلانية. تُشارَك بياناتك الضرورية فقط مع مقدم الرعاية المعيَّن لك بالقدر اللازم لتقديم الخدمة، أو عندما يطلب القانون ذلك.',
     ),
     _PolicySection(
       title: '5. حماية بياناتك',
-      text:
-          'نستخدم إجراءات تقنية وتنظيمية لحماية بياناتك من الوصول غير المصرّح به أو الفقدان. ومع ذلك لا توجد وسيلة حماية مطلقة، لذلك ننصحك بالحفاظ على سرية بيانات حسابك.',
+      text: 'نستخدم إجراءات تقنية وتنظيمية لحماية بياناتك من الوصول غير المصرّح به أو الفقدان. ومع ذلك لا توجد وسيلة حماية مطلقة، لذلك ننصحك بالحفاظ على سرية بيانات حسابك.',
     ),
     _PolicySection(
       title: '6. حقوقك',
@@ -88,17 +85,15 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       alignment: AlignmentDirectional.centerStart,
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 20,
-                        ),
+                        color: AppColors.neutralDarkActive,
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                       ),
                     ),
                     const Text(
                       'سياسة الخصوصية',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -147,8 +142,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Email: support@shifaa.com',
-                                    style: bodyStyle),
+                                Text(
+                                  'Email: support@shifaa.com',
+                                  style: bodyStyle,
+                                ),
                                 Text('Phone: +XXX-XXX-XXXX', style: bodyStyle),
                               ],
                             ),

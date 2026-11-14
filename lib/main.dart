@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:my_first_app/core/routes/app_routes.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/dev.dart/role_switch_screen.dart';
-import 'package:my_first_app/features/provider/screens/provider_shell.dart';
-import 'package:my_first_app/features/splash/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 Future<void> main() async {

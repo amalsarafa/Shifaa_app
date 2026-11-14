@@ -79,7 +79,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                     child: Image.asset(
                       p.image,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, error, __) {
+                      errorBuilder: (_, error, _) {
                         debugPrint('Provider image error: ${p.image} → $error');
                         return Container(
                           color: AppColors.primary50,

@@ -497,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen>
                     height: 112,
                     fit: BoxFit.cover,
                     cacheWidth: 420,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       height: 112,
                       color: AppColors.primary50,
                       alignment: Alignment.center,
@@ -581,7 +581,7 @@ class _HomeScreenState extends State<HomeScreen>
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
             itemCount: providers.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) => _providerCard(providers[i]),
           ),
         ),
@@ -619,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen>
                     height: 48,
                     fit: BoxFit.cover,
                     cacheWidth: 144,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       width: 48,
                       height: 48,
                       color: AppColors.primary50,

@@ -284,7 +284,7 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
           Switch(
             value: _followUp,
             onChanged: (v) => setState(() => _followUp = v),
-            activeColor: AppColors.white,
+            activeThumbColor: AppColors.white,
             activeTrackColor: AppColors.primary600,
             inactiveThumbColor: AppColors.white,
             inactiveTrackColor: AppColors.border,

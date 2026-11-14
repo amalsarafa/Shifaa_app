@@ -362,7 +362,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
             value: _available,
             // 🔥 لاحقاً: حفظ حالة التوفر في Firebase
             onChanged: (v) => setState(() => _available = v),
-            activeColor: AppColors.white,
+            activeThumbColor: AppColors.white,
             activeTrackColor: AppColors.primary600,
             inactiveThumbColor: AppColors.white,
             inactiveTrackColor: AppColors.border,
@@ -452,7 +452,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
               ),
             ),
           ),
-          if (trailing != null) trailing,
+          ?trailing,
           if (action != null)
             InkWell(
               onTap: onAction,

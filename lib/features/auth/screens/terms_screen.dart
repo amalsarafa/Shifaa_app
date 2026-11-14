@@ -89,7 +89,7 @@ class TermsScreen extends StatelessWidget {
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
+                          Icons.arrow_back_ios_new,
                           size: 20,
                         ),
                       ),

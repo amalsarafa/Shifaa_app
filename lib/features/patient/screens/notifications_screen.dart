@@ -10,7 +10,7 @@ class _NotificationItem {
   final IconData icon;
   final Color iconColor;
   final Color iconBg;
-  bool unread; 
+  bool unread;
 
   _NotificationItem({
     required this.title,
@@ -41,7 +41,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   static const String _emptyIcon = 'assets/icons/empty_notifications.svg';
 
-  static const bool _showSample = true;//false اذا بدي اشوف الاشعارات الفارغة
+  static const bool _showSample = true; //false اذا بدي اشوف الاشعارات الفارغة
 
   late final List<_NotificationSection> _sections;
 
@@ -62,8 +62,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 'وافق الممرض علي أحمد على طلبك لخدمة الرعاية التمريضية يوم السبت 10 أكتوبر الساعة 3:30 م.',
             time: 'الآن',
             icon: Icons.event_available_outlined,
-            iconColor: const Color(0xFF2F9E99),
-            iconBg: const Color(0xFFE6F4F3),
+            iconColor: AppColors.primary600,
+            iconBg: AppColors.primary50,
             unread: true,
           ),
           _NotificationItem(
@@ -71,8 +71,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             body: 'زيارتك مع الممرض علي أحمد تبدأ خلال ساعة.',
             time: '9:10 ص',
             icon: Icons.notifications_active_outlined,
-            iconColor: const Color(0xFFE8920C),
-            iconBg: const Color(0xFFFFF1D6),
+            iconColor: AppColors.warningDark,
+            iconBg: AppColors.warningLight,
             unread: true,
           ),
         ],
@@ -86,8 +86,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 'للأسف، لا يستطيع الممرض عمر قبول طلبك. تصفّح مقدمي الرعاية المتاحين الآخرين.',
             time: '4:15 م',
             icon: Icons.event_busy_outlined,
-            iconColor: const Color(0xFFE8920C),
-            iconBg: const Color(0xFFFFF1D6),
+            iconColor: AppColors.warningDark,
+            iconBg: AppColors.warningLight,
           ),
           _NotificationItem(
             title: 'مرحباً بك في شفاء',
@@ -154,12 +154,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             alignment: AlignmentDirectional.centerStart,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              color: AppColors.neutralDarkActive,
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
           ),
           const Text(
             'الإشعارات',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           if (_unreadCount > 0)
             Align(
@@ -259,11 +260,11 @@ class _NotificationCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

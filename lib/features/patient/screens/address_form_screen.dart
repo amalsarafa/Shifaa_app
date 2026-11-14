@@ -265,7 +265,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               width: double.infinity,
               height: 176,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   Container(color: AppColors.primary50),
             ),
           ),

@@ -48,7 +48,7 @@ class PersonalInfoScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  empty ? 'غير محدد' : value!,
+                  empty ? 'غير محدد' : value,
                   textDirection: (ltr && !empty) ? TextDirection.ltr : null,
                   style: TextStyle(
                     fontSize: 14,

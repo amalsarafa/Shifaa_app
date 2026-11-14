@@ -529,7 +529,7 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: ValueListenableBuilder<List<ProviderAppointment>>(
         valueListenable: ProviderAppointmentRepository.appointments,
-        builder: (context, _, __) {
+        builder: (context, _, _) {
           final a = ProviderAppointmentRepository.byId(id);
 
           if (a == null) {

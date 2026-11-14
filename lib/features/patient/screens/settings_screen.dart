@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: 'تحديثات الحجوزات والتذكير قبل الموعد',
                 trailing: Switch(
                   value: _notificationsOn,
-                  activeColor: AppColors.white,
+                  activeThumbColor: AppColors.white,
                   activeTrackColor: AppColors.primary600,
                   onChanged: (v) => setState(() => _notificationsOn = v),
                 ),

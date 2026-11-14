@@ -590,8 +590,9 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
   Widget _emergencySection() {
     String? requiredIfOther(String? v, TextEditingController other) {
       final text = v?.trim() ?? '';
-      if (text.isEmpty && other.text.trim().isNotEmpty)
+      if (text.isEmpty && other.text.trim().isNotEmpty) {
         return 'هذا الحقل مطلوب';
+      }
       return null;
     }
 

@@ -213,7 +213,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           p.image,
           fit: BoxFit.cover,
           cacheWidth: 120,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             color: AppColors.primary50,
             alignment: Alignment.center,
             child: Text(
