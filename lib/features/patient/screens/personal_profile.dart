@@ -17,12 +17,7 @@ class PersonalProfileScreen extends StatelessWidget {
       Navigator.pushNamed(context, route);
       return;
     }
-    // مؤقت: تختفي هذه الرسالة عندما نضيف كل الصفحات
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('سنضيف هذه الصفحة في الخطوة القادمة')),
-      );
+    
   }
 
   // ───────────────────────── بطاقة المريض ─────────────────────────
@@ -130,7 +125,6 @@ class PersonalProfileScreen extends StatelessWidget {
                 ),
               ),
               if (trailing != null) ...[trailing, const SizedBox(width: 8)],
-              // chevron_right ينقلب تلقائياً في RTL فيشير لليسار
               if (!danger)
                 const Icon(
                   Icons.chevron_right_rounded,
@@ -215,20 +209,8 @@ class PersonalProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
+                                Row(
                   children: [
-                                        Expanded(
-                      child: AppButton(
-                        height: 44,
-                        fontSize: 13,
-                        text: 'إلغاء',
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.neutralDarkActive,
-                        borderColor: AppColors.border,
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Expanded(
                       child: AppButton(
                         height: 44,
@@ -237,6 +219,18 @@ class PersonalProfileScreen extends StatelessWidget {
                         backgroundColor: AppColors.error700,
                         foregroundColor: AppColors.white,
                         onPressed: () => Navigator.pop(dialogContext, true),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AppButton(
+                        height: 44,
+                        fontSize: 13,
+                        text: 'إلغاء',
+                        backgroundColor: AppColors.white,
+                        foregroundColor: AppColors.neutralDarkActive,
+                        borderColor: AppColors.border,
+                        onPressed: () => Navigator.pop(dialogContext, false),
                       ),
                     ),
                   ],

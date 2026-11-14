@@ -55,8 +55,9 @@ class ServicesScreen extends StatelessWidget {
                   Text(
                     category.subtitle,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.neutralDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.neutralDarkActive,
                     ),
                   ),
                   const SizedBox(height: 16),

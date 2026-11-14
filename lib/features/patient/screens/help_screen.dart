@@ -306,6 +306,11 @@ class _HelpScreenState extends State<HelpScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const Text(
             'الدعم والمساعدة',
             style: TextStyle(

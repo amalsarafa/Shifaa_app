@@ -5,28 +5,30 @@ import 'package:my_first_app/features/patient/services/medical_record_repository
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
 // ───────────────────────── عناصر مشتركة بين الصفحة والنافذة ─────────────────────────
-const TextStyle _inputStyle =
-    TextStyle(fontSize: 13, color: AppColors.neutralDarkActive);
+const TextStyle _inputStyle = TextStyle(
+  fontSize: 13,
+  color: AppColors.neutralDarkActive,
+);
 
 OutlineInputBorder _outline(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: color),
-    );
+  borderRadius: BorderRadius.circular(16),
+  borderSide: BorderSide(color: color),
+);
 
 InputDecoration _decoration(String hint, {Widget? suffix}) => InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 13, color: AppColors.neutralNormal),
-      filled: true,
-      fillColor: AppColors.white,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      suffixIcon: suffix,
-      enabledBorder: _outline(AppColors.border),
-      focusedBorder: _outline(AppColors.primary500),
-      errorBorder: _outline(AppColors.error700),
-      focusedErrorBorder: _outline(AppColors.error700),
-      errorStyle: const TextStyle(fontSize: 11, color: AppColors.error700),
-    );
+  hintText: hint,
+  hintStyle: const TextStyle(fontSize: 13, color: AppColors.neutralNormal),
+  filled: true,
+  fillColor: AppColors.white,
+  isDense: true,
+  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  suffixIcon: suffix,
+  enabledBorder: _outline(AppColors.border),
+  focusedBorder: _outline(AppColors.primary500),
+  errorBorder: _outline(AppColors.error700),
+  focusedErrorBorder: _outline(AppColors.error700),
+  errorStyle: const TextStyle(fontSize: 11, color: AppColors.error700),
+);
 
 Widget _label(String text, {String? hint}) {
   return Padding(
@@ -302,19 +304,19 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
 
   Widget _bloodTypeSection() {
     Widget row(List<String> types) => Row(
-          children: [
-            for (int i = 0; i < types.length; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
-              Expanded(
-                child: _choice(
-                  types[i],
-                  _bloodType == types[i],
-                  () => setState(() => _bloodType = types[i]),
-                ),
-              ),
-            ],
-          ],
-        );
+      children: [
+        for (int i = 0; i < types.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: _choice(
+              types[i],
+              _bloodType == types[i],
+              () => setState(() => _bloodType = types[i]),
+            ),
+          ),
+        ],
+      ],
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +412,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
     );
   }
 
-    Widget _allergyChip(String text) {
+  Widget _allergyChip(String text) {
     return Container(
       padding: const EdgeInsets.only(right: 12, left: 4, top: 2, bottom: 2),
       decoration: BoxDecoration(
@@ -445,6 +447,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
       ),
     );
   }
+
   Widget _allergiesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -587,7 +590,8 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
   Widget _emergencySection() {
     String? requiredIfOther(String? v, TextEditingController other) {
       final text = v?.trim() ?? '';
-      if (text.isEmpty && other.text.trim().isNotEmpty) return 'هذا الحقل مطلوب';
+      if (text.isEmpty && other.text.trim().isNotEmpty)
+        return 'هذا الحقل مطلوب';
       return null;
     }
 
@@ -639,6 +643,11 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const Text(
             'تعديل السجل الطبي',
             style: TextStyle(
@@ -814,14 +823,17 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
+                            Row(
                 children: [
                   Expanded(
                     child: AppButton(
                       height: 44,
                       fontSize: 13,
-                      text: 'إضافة',
-                      onPressed: _valid ? _submit : null,
+                      text: 'إلغاء',
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.neutralDarkActive,
+                      borderColor: AppColors.border,
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -829,11 +841,8 @@ class _AddMedicationDialogState extends State<_AddMedicationDialog> {
                     child: AppButton(
                       height: 44,
                       fontSize: 13,
-                      text: 'إلغاء',
-                      backgroundColor: AppColors.white,
-                      foregroundColor: AppColors.primary800,
-                      borderColor: AppColors.primary200,
-                      onPressed: () => Navigator.pop(context),
+                      text: 'إضافة',
+                      onPressed: _valid ? _submit : null,
                     ),
                   ),
                 ],

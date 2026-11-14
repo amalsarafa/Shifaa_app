@@ -17,7 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const String _appVersion = '1.0.0';
 
   // ───────────────────────── حذف الحساب ─────────────────────────
-    Future<void> _confirmDelete() async {
+  Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => const _DeleteAccountDialog(),
@@ -59,11 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _divider() => const Divider(
-        height: 1,
-        thickness: 1,
-        color: AppColors.border,
-      );
+  Widget _divider() =>
+      const Divider(height: 1, thickness: 1, color: AppColors.border);
 
   Widget _row({
     required IconData icon,
@@ -75,8 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     final iconBg = danger ? AppColors.error50 : AppColors.primary50;
     final iconColor = danger ? AppColors.error700 : AppColors.primary600;
-    final titleColor =
-        danger ? AppColors.error700 : AppColors.neutralDarkActive;
+    final titleColor = danger
+        ? AppColors.error700
+        : AppColors.neutralDarkActive;
 
     return InkWell(
       onTap: onTap,
@@ -125,10 +123,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget get _chevron => const Icon(
-        Icons.chevron_left_rounded,
-        size: 20,
-        color: AppColors.neutralDark,
-      );
+    Icons.chevron_right_rounded,
+    size: 20,
+    color: AppColors.neutralDark,
+  );
 
   // ───────────────────────── الشاشة ─────────────────────────
   @override
@@ -144,11 +142,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           scrolledUnderElevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(
-              Icons.chevron_right_rounded,
-              size: 28,
-              color: AppColors.neutralDarkActive,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
@@ -195,8 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'سياسة الخصوصية',
                     subtitle: 'كيف نحمي بياناتك الصحية',
                     trailing: _chevron,
-                    onTap: () =>
-                        Navigator.pushNamed(context, 'PrivacyPolicy'),
+                    onTap: () => Navigator.pushNamed(context, 'PrivacyPolicy'),
                   ),
                   _divider(),
                   _row(
@@ -223,6 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
 // ───────────────────────── نافذة تأكيد حذف الحساب ─────────────────────────
 class _DeleteAccountDialog extends StatefulWidget {
   const _DeleteAccountDialog();
@@ -245,9 +240,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   }
 
   OutlineInputBorder _border(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: color),
-      );
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: color),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -256,9 +251,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       child: Dialog(
         backgroundColor: AppColors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 32),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -322,20 +315,8 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                 ),
               ),
               const SizedBox(height: 24),
-              Row(
+                            Row(
                 children: [
-                  Expanded(
-                    child: AppButton(
-                      height: 44,
-                      fontSize: 13,
-                      text: 'إلغاء',
-                      backgroundColor: AppColors.white,
-                      foregroundColor: AppColors.neutralDarkActive,
-                      borderColor: AppColors.border,
-                      onPressed: () => Navigator.pop(context, false),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: AppButton(
                       height: 44,
@@ -348,6 +329,18 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                       onPressed: () {
                         if (_canDelete) Navigator.pop(context, true);
                       },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AppButton(
+                      height: 44,
+                      fontSize: 13,
+                      text: 'إلغاء',
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.neutralDarkActive,
+                      borderColor: AppColors.border,
+                      onPressed: () => Navigator.pop(context, false),
                     ),
                   ),
                 ],

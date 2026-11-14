@@ -15,8 +15,10 @@ class EditPersonalInfoScreen extends StatefulWidget {
 
 class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
   static const Color _border = AppColors.border;
-  static const TextStyle _inputStyle =
-      TextStyle(fontSize: 13, color: AppColors.neutralDarkActive);
+  static const TextStyle _inputStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.neutralDarkActive,
+  );
 
   final _formKey = GlobalKey<FormState>();
   late final Patient _patient;
@@ -68,11 +70,11 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppColors.primary600,
-                onPrimary: AppColors.white,
-                surface: AppColors.white,
-                onSurface: AppColors.neutralDarkActive,
-              ),
+            primary: AppColors.primary600,
+            onPrimary: AppColors.white,
+            surface: AppColors.white,
+            onSurface: AppColors.neutralDarkActive,
+          ),
           datePickerTheme: const DatePickerThemeData(
             backgroundColor: AppColors.white,
             surfaceTintColor: Colors.transparent,
@@ -176,24 +178,23 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
 
   // ───────────────────────── عناصر الشكل ─────────────────────────
   OutlineInputBorder _outline(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: color),
-      );
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(color: color),
+  );
 
   InputDecoration _decoration({String? hint}) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontSize: 13, color: AppColors.neutralDark),
-        filled: true,
-        fillColor: AppColors.white,
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        enabledBorder: _outline(_border),
-        focusedBorder: _outline(AppColors.primary500),
-        errorBorder: _outline(AppColors.error700),
-        focusedErrorBorder: _outline(AppColors.error700),
-        errorStyle: const TextStyle(fontSize: 11, color: AppColors.error700),
-      );
+    hintText: hint,
+    hintStyle: const TextStyle(fontSize: 13, color: AppColors.neutralDark),
+    filled: true,
+    fillColor: AppColors.white,
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    enabledBorder: _outline(_border),
+    focusedBorder: _outline(AppColors.primary500),
+    errorBorder: _outline(AppColors.error700),
+    focusedErrorBorder: _outline(AppColors.error700),
+    errorStyle: const TextStyle(fontSize: 11, color: AppColors.error700),
+  );
 
   Widget _label(String text, {String? hint}) {
     return Padding(
@@ -365,6 +366,11 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const Text(
             'تعديل الملف الشخصي',
             style: TextStyle(
@@ -407,8 +413,8 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
                 validator: (v) {
                   final text = v?.trim() ?? '';
                   if (text.isEmpty) return null; // اختياري
-                  final ok =
-                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(text);
+                  final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                      .hasMatch(text);
                   return ok ? null : 'البريد الإلكتروني غير صحيح';
                 },
               ),

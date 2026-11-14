@@ -9,8 +9,11 @@ class PersonalInfoScreen extends StatelessWidget {
   const PersonalInfoScreen({super.key});
 
   static const Color _border = AppColors.border;
-  static const Widget _divider =
-      Divider(height: 1, thickness: 1, color: _border);
+  static const Widget _divider = Divider(
+    height: 1,
+    thickness: 1,
+    color: _border,
+  );
 
   Widget _infoRow({
     required IconData icon,
@@ -76,6 +79,11 @@ class PersonalInfoScreen extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const Text(
             'معلوماتي الشخصية',
             style: TextStyle(

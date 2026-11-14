@@ -261,7 +261,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: Image.asset(
-              'assets/images/patients/map_preview.png',
+              'assets/images/patient/map_preview.png',
               width: double.infinity,
               height: 176,
               fit: BoxFit.cover,

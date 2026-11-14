@@ -31,27 +31,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   final _searchCtrl = TextEditingController();
 
-  // حركة يد الترحيب مرة واحدة عند فتح الشاشة
-  late final AnimationController _waveCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  );
-  late final Animation<double> _wave = TweenSequence<double>([
-    TweenSequenceItem(tween: Tween<double>(begin: 0, end: 0.06), weight: 1),
-    TweenSequenceItem(tween: Tween<double>(begin: 0.06, end: -0.04), weight: 1),
-    TweenSequenceItem(tween: Tween<double>(begin: -0.04, end: 0.06), weight: 1),
-    TweenSequenceItem(tween: Tween<double>(begin: 0.06, end: 0), weight: 1),
-  ]).animate(CurvedAnimation(parent: _waveCtrl, curve: Curves.easeInOut));
 
   @override
   void initState() {
     super.initState();
-    _waveCtrl.forward();
   }
 
   @override
   void dispose() {
-    _waveCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -156,15 +143,6 @@ class _HomeScreenState extends State<HomeScreen>
                               fontWeight: FontWeight.bold,
                               color: AppColors.white,
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        RotationTransition(
-                          turns: _wave,
-                          alignment: Alignment.bottomCenter,
-                          child: const Text(
-                            '👋',
-                            style: TextStyle(fontSize: 18),
                           ),
                         ),
                       ],

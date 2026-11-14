@@ -23,7 +23,6 @@ class CategoriesScreen extends StatelessWidget {
 
   static const Color _border = AppColors.border;
 
-  // تم حذف قسم "زيارة طبيب"
   static const List<CategoryItem> categories = [
     CategoryItem(
       description: 'رعاية تمريضية متخصصة في منزلك.',

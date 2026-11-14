@@ -275,24 +275,25 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 const SizedBox(height: 8),
                 
                 const SizedBox(height: 16),
-                Row(
+                                             Row(
                   children: [
                     Expanded(
                       child: _cardButton(
-                        label: 'تراجع',
-                        background: AppColors.primary600,
+                        label: 'نعم، إلغاء الطلب',
+                        background: AppColors.error700,
                         foreground: AppColors.white,
                         borderColor: null,
-                        onPressed: () => Navigator.pop(dialogContext, false),
+                        onPressed: () => Navigator.pop(dialogContext, true),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _cardButton(
-                        label: 'نعم، إلغاء الطلب',
-                        foreground: AppColors.error700,
-                        borderColor: AppColors.error100,
-                        onPressed: () => Navigator.pop(dialogContext, true),
+                        label: 'إلغاء',
+                        background: AppColors.white,
+                        foreground: AppColors.neutralDarkActive,
+                        borderColor: AppColors.border,
+                        onPressed: () => Navigator.pop(dialogContext, false),
                       ),
                     ),
                   ],

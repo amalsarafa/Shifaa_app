@@ -100,6 +100,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
       _slots[d] = AvailabilityRepository.slotsFor(
         providerKey: _args.provider.name, // لاحقاً: provider.id
         date: d,
+        minutes: _visitMinutes(_args.service.duration),
       );
     }
     // أول يوم فيه وقت متاح
@@ -124,6 +125,22 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
     final m = t.substring(3);
     final h12 = h % 12 == 0 ? 12 : h % 12;
     return '$h12:$m ${h >= 12 ? 'م' : 'ص'}';
+  }
+
+  /// نص الفترة مثل "9:00 – 9:30 ص"، وإذا اختلفت ص/م نكتب الرمزين
+  String _fmtRange(TimeSlot s) {
+    final a = _fmtTime(s.time);
+    final b = _fmtTime(s.endTime);
+    final samePeriod = a.substring(a.length - 1) == b.substring(b.length - 1);
+    return samePeriod ? '${a.substring(0, a.length - 2)} – $b' : '$a – $b';
+  }
+
+  /// مدة الزيارة بالدقائق من نص مثل "15-30 د": نأخذ أكبر رقم (30)
+  int _visitMinutes(String duration) {
+    final nums = RegExp(
+      r'\d+',
+    ).allMatches(duration).map((m) => int.parse(m.group(0)!));
+    return nums.isEmpty ? 30 : nums.reduce((a, b) => a > b ? a : b);
   }
 
   String _initial(String name) {
@@ -517,7 +534,8 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
       onTap: booked ? null : () => setState(() => _selectedTime = s.time),
       child: Container(
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primary600
@@ -527,11 +545,11 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
           borderRadius: BorderRadius.circular(32),
           border: Border.all(color: selected ? AppColors.primary600 : _border),
         ),
-        // widthFactor: 1 => العرض على قد النص (مش بياخد عرض السطر كله)
-        child: Center(
-          widthFactor: 1,
+        // يصغّر النص تلقائياً فقط لو ما اتسع (ما بنغيّر حجم الخط)
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
           child: Text(
-            _fmtTime(s.time),
+            _fmtRange(s),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -595,6 +613,35 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
     );
   }
 
+  /// الفترات في صفوف، في كل صف 3 فترات بنفس العرض
+  Widget _slotsGrid(List<TimeSlot> slots) {
+    const perRow = 3;
+    final rows = <Widget>[];
+
+    for (var i = 0; i < slots.length; i += perRow) {
+      final end = (i + perRow < slots.length) ? i + perRow : slots.length;
+      final rowSlots = slots.sublist(i, end);
+
+      rows.add(
+        Row(
+          children: [
+            for (var j = 0; j < perRow; j++) ...[
+              if (j > 0) const SizedBox(width: 8),
+              Expanded(
+                child: j < rowSlots.length
+                    ? _timeChip(rowSlots[j])
+                    : const SizedBox(),
+              ),
+            ],
+          ],
+        ),
+      );
+      if (end < slots.length) rows.add(const SizedBox(height: 8));
+    }
+
+    return Column(children: rows);
+  }
+
   Widget _timeSection() {
     final slots = _selectedDay == null
         ? const <TimeSlot>[]
@@ -616,11 +663,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
             ),
           )
         else ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: slots.map(_timeChip).toList(),
-          ),
+          _slotsGrid(slots),
           const SizedBox(height: 16),
           _timeLegend(),
         ],

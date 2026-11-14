@@ -117,15 +117,14 @@ class AddressesScreen extends StatelessWidget {
       iconColor: AppColors.error700,
       title: 'حذف العنوان؟',
       message: 'سيتم حذف «${nameFor(index)}» من عناوينك المحفوظة.',
-      actions: (dialogContext) => [
+                actions: (dialogContext) => [
         Expanded(
           child: AppButton(
             height: 44,
             fontSize: 13,
             text: 'حذف',
-            backgroundColor: AppColors.white,
-            foregroundColor: AppColors.error700,
-            borderColor: AppColors.error100,
+            backgroundColor: AppColors.error700,
+            foregroundColor: AppColors.white,
             onPressed: () => Navigator.pop(dialogContext, true),
           ),
         ),
@@ -135,6 +134,9 @@ class AddressesScreen extends StatelessWidget {
             height: 44,
             fontSize: 13,
             text: 'إلغاء',
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.neutralDarkActive,
+            borderColor: AppColors.border,
             onPressed: () => Navigator.pop(dialogContext, false),
           ),
         ),
@@ -207,8 +209,10 @@ class AddressesScreen extends StatelessWidget {
               ),
               if (isDefault)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary700,
                     borderRadius: BorderRadius.circular(16),
@@ -330,6 +334,11 @@ class AddressesScreen extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: AppColors.neutralDarkActive,
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const Text(
             'العناوين المحفوظة',
             style: TextStyle(

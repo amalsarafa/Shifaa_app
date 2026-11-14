@@ -22,6 +22,17 @@ import 'package:my_first_app/features/patient/screens/address_form_screen.dart';
 import 'package:my_first_app/features/patient/screens/medical_record_screen.dart';
 import 'package:my_first_app/features/patient/screens/edit_medical_record_screen.dart';
 import 'package:my_first_app/features/patient/screens/settings_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_notifications_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_patient_profile_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_shell.dart';
+import 'package:my_first_app/features/provider/screens/provider_home_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_appointments_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_patients_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_profile_screen.dart'
+    as provider_app;
+import 'package:my_first_app/features/provider/screens/provider_appointment_details_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_visit_report_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_report_view_screen.dart';
 
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
@@ -52,6 +63,20 @@ class AppRoutes {
     "EditMedicalRecord": (context) => const EditMedicalRecordScreen(),
     "Settings": (context) => const SettingsScreen(),
     "PrivacyPolicy": (context) => const PrivacyPolicyScreen(),
+
     // provider
+    "ProviderHome": (context) => const ProviderShell(),
+    "ProviderHomeScreen": (context) => const ProviderHomeScreen(),
+    "ProviderAppointments": (context) => const ProviderAppointmentsScreen(),
+    "ProviderPatients": (context) => const ProviderPatientsScreen(),
+    "ProviderMyProfile": (context) =>
+        const provider_app.ProviderMyProfileScreen(),
+    "ProviderNotifications": (context) => const ProviderNotificationsScreen(),
+    "ProviderAppointmentDetails": (context) =>
+        const ProviderAppointmentDetailsScreen(),
+    "ProviderVisitReport": (context) => const ProviderVisitReportScreen(),
+    "ProviderReportView": (context) => const ProviderReportViewScreen(),
+    "ProviderPatientProfile": (context) =>
+    const ProviderPatientProfileScreen(),
   };
 }
