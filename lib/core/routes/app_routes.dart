@@ -33,7 +33,13 @@ import 'package:my_first_app/features/provider/screens/provider_profile_screen.d
 import 'package:my_first_app/features/provider/screens/provider_appointment_details_screen.dart';
 import 'package:my_first_app/features/provider/screens/provider_visit_report_screen.dart';
 import 'package:my_first_app/features/provider/screens/provider_report_view_screen.dart';
-
+import 'package:my_first_app/features/provider/screens/provider_personal_info_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_qualifications_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_services_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_schedule_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_reviews_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_settings_screen.dart';
+import 'package:my_first_app/features/provider/screens/provider_help_screen.dart';
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     // general
@@ -78,5 +84,15 @@ class AppRoutes {
     "ProviderReportView": (context) => const ProviderReportViewScreen(),
     "ProviderPatientProfile": (context) =>
     const ProviderPatientProfileScreen(),
-  };
+  
+    "ProviderPersonalInfo": (context) => const ProviderPersonalInfoScreen(),
+    "ProviderQualifications": (context) =>
+        const ProviderQualificationsScreen(),
+    "ProviderServices": (context) => const ProviderServicesScreen(),
+    "ProviderReviews": (context) => const ProviderReviewsScreen(),
+    "ProviderSettings": (context) => const ProviderSettingsScreen(),
+    "ProviderHelp": (context) => const ProviderHelpScreen(),
+    "ProviderSchedule": (context) => const ProviderScheduleScreen(),
+};
 }
+

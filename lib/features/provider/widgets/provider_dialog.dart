@@ -43,8 +43,20 @@ Future<bool?> showProviderDialog(
               ),
               const SizedBox(height: 16),
               Row(
+                // RTL: زر التأكيد يميناً والإلغاء يساراً
                 children: [
+                  Expanded(
+                    child: AppButton(
+                      height: 44,
+                      fontSize: 13,
+                      text: confirmText,
+                      backgroundColor:
+                          danger ? AppColors.error700 : AppColors.primary600,
+                      onPressed: () => Navigator.pop(ctx, true),
+                    ),
+                  ),
                   if (cancelText != null) ...[
+                    const SizedBox(width: 8),
                     Expanded(
                       child: AppButton(
                         height: 44,
@@ -56,18 +68,7 @@ Future<bool?> showProviderDialog(
                         onPressed: () => Navigator.pop(ctx, false),
                       ),
                     ),
-                    const SizedBox(width: 8),
                   ],
-                  Expanded(
-                    child: AppButton(
-                      height: 44,
-                      fontSize: 13,
-                      text: confirmText,
-                      backgroundColor:
-                          danger ? AppColors.error700 : AppColors.primary600,
-                      onPressed: () => Navigator.pop(ctx, true),
-                    ),
-                  ),
                 ],
               ),
             ],

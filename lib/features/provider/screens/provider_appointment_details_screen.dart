@@ -16,21 +16,13 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
     await showProviderDialog(
       context,
       title: 'تم قبول الطلب',
-      message: 'ستجد الموعد ضمن المواعيد القادمة، ويظهر لك السجل الطبي للمريض.',
+      message: 'ستجد الموعد ضمن المواعيد القادمة، ويظهر لك رقم المريض للتواصل.',
       confirmText: 'حسناً',
     );
   }
 
   Future<void> _decline(BuildContext context, ProviderAppointment a) async {
-    final reason = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => const _DeclineSheet(),
-    );
+    final reason = await showProviderDeclineSheet(context);
     if (reason == null) return;
     ProviderAppointmentRepository.decline(a.id, reason);
     if (context.mounted) Navigator.pop(context);
@@ -46,8 +38,8 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
             tooltip: 'رجوع',
             onPressed: () => Navigator.pop(context),
             icon: const Icon(
-              Icons.chevron_right_rounded,
-              size: 28,
+              Icons.arrow_back_ios_new,
+              size: 20,
               color: AppColors.neutralDarkActive,
             ),
           ),
@@ -293,45 +285,6 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
     return _card(rows);
   }
 
-  Widget _lockedMedical() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.neutralLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.lock_outline_rounded,
-              size: 20,
-              color: AppColors.neutralDark,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Text(
-              'السجل الطبي للمريض يظهر لك بعد قبول الطلب.',
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.6,
-                color: AppColors.neutralDark,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ── السجل الطبي
   Widget _mini(String label, String value) {
     return Expanded(
@@ -478,16 +431,19 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
           children: [
             Expanded(
               child: AppButton(
+                text: 'قبول',
+                onPressed: () => _accept(context, a),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AppButton(
                 text: 'رفض',
                 backgroundColor: AppColors.white,
                 foregroundColor: AppColors.neutralDarkActive,
                 borderColor: AppColors.border,
                 onPressed: () => _decline(context, a),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: AppButton(text: 'قبول', onPressed: () => _accept(context, a)),
             ),
           ],
         );
@@ -541,8 +497,6 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
 
           final showPhone = a.status == ProviderApptStatus.confirmed &&
               a.phone.isNotEmpty;
-          final showMedical = a.status == ProviderApptStatus.confirmed;
-          final showLocked = a.status == ProviderApptStatus.pending;
 
           return Scaffold(
             backgroundColor: AppColors.background,
@@ -570,14 +524,8 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
                         const SizedBox(height: 24),
                         _title('معلومات الزيارة'),
                         _visitInfo(a),
-                        if (showLocked) ...[
-                          const SizedBox(height: 24),
-                          _lockedMedical(),
-                        ],
-                        if (showMedical) ...[
-                          const SizedBox(height: 24),
-                          _medicalRecord(a.medical),
-                        ],
+                        const SizedBox(height: 24),
+                        _medicalRecord(a.medical),
                       ],
                     ),
                   ),
@@ -748,7 +696,7 @@ class _DeclineSheetState extends State<_DeclineSheet> {
                 const SizedBox(height: 8),
               ],
               const SizedBox(height: 8),
-                           Row(
+              Row(
                 children: [
                   Expanded(
                     child: AppButton(
@@ -777,4 +725,17 @@ class _DeclineSheetState extends State<_DeclineSheet> {
       ),
     );
   }
+}
+
+/// تفتح نافذة سبب الرفض وتعيد السبب (أو null عند الإلغاء)
+Future<String?> showProviderDeclineSheet(BuildContext context) {
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (_) => const _DeclineSheet(),
+  );
 }

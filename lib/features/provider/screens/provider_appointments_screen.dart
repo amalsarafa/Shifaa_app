@@ -1,37 +1,17 @@
 // lib/features/provider/screens/provider_appointments_screen.dart
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/provider/screens/provider_appointment_details_screen.dart'
+    show showProviderDeclineSheet;
+import 'package:my_first_app/features/provider/services/provider_appointment_model.dart';
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
-
-enum _Cancel { declined, byPatient, expired }
-
-/// موعد وهمي (يُستبدل ببيانات Firebase لاحقاً)
-class _MockAppt {
-  final String name;
-  final String service;
-  final String time;
-  final String date;
-  final String place;
-  final String phone;
-  final String expires;
-  final int expiresInMinutes;
-  final _Cancel? cancel;
-
-  const _MockAppt({
-    required this.name,
-    required this.service,
-    required this.time,
-    required this.date,
-    required this.place,
-    this.phone = '',
-    this.expires = '',
-    this.expiresInMinutes = 0,
-    this.cancel,
-  });
-}
+import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 class ProviderAppointmentsScreen extends StatefulWidget {
-  const ProviderAppointmentsScreen({super.key});
+  // رقم التبويب المطلوب فتحه من خارج الصفحة (0 معلقة، 1 قادمة)
+  final ValueNotifier<int>? tabRequest;
+
+  const ProviderAppointmentsScreen({super.key, this.tabRequest});
 
   @override
   State<ProviderAppointmentsScreen> createState() =>
@@ -46,100 +26,41 @@ class _ProviderAppointmentsScreenState
   final _searchCtrl = TextEditingController();
   int _tab = 0;
 
-  // بيانات وهمية 🔥 لاحقاً: من Firebase
-  final List<_MockAppt> _pending = [
-    const _MockAppt(
-      name: 'أحمد سالم',
-      service: 'التمريض · تغيير الضمادات',
-      time: '5:00 م',
-      date: 'اليوم',
-      place: 'غزة، تل الهوى',
-      expires: 'ينتهي خلال 9 دقائق',
-      expiresInMinutes: 9,
-    ),
-    const _MockAppt(
-      name: 'علي أحمد',
-      service: 'التمريض · رعاية كبار السن',
-      time: '3:30 م',
-      date: 'اليوم',
-      place: 'غزة، الرمال',
-      expires: 'ينتهي خلال 4 دقائق',
-      expiresInMinutes: 4,
-    ),
-  ];
+  // البيانات من المخزن المشترك 🔥 لاحقاً: من Firebase
+  List<ProviderAppointment> get _all =>
+      ProviderAppointmentRepository.appointments.value;
 
-  final List<_MockAppt> _upcoming = [
-    const _MockAppt(
-      name: 'فاطمة علي',
-      service: 'الرعاية التمريضية · الحقن',
-      time: '3:30 م',
-      date: 'اليوم',
-      place: 'غزة، الرمال',
-      phone: '+970 59 000 0002',
-    ),
-    const _MockAppt(
-      name: 'لينا صالح',
-      service: 'التمريض · رعاية كبار السن',
-      time: '10:00 ص',
-      date: 'السبت، 14 نوفمبر',
-      place: 'غزة، الرمال',
-      phone: '+970 59 000 0003',
-    ),
-  ];
+  List<ProviderAppointment> get _pending =>
+      _all.where((a) => a.status == ProviderApptStatus.pending).toList();
 
-  final List<_MockAppt> _done = [
-    const _MockAppt(
-      name: 'منى يوسف',
-      service: 'الرعاية التمريضية · الحقن',
-      time: '1:00 م',
-      date: 'أمس',
-      place: 'غزة، الرمال',
-    ),
-    const _MockAppt(
-      name: 'خالد نبيل',
-      service: 'العلاج الطبيعي · تأهيل الركبة',
-      time: '11:00 ص',
-      date: 'الأربعاء',
-      place: 'غزة، الشجاعية',
-    ),
-    const _MockAppt(
-      name: 'رنا حسن',
-      service: 'التمريض · تغيير الضمادات',
-      time: '9:30 ص',
-      date: 'الاثنين',
-      place: 'غزة، النصيرات',
-    ),
-  ];
+  List<ProviderAppointment> get _upcoming =>
+      _all.where((a) => a.status == ProviderApptStatus.confirmed).toList();
 
-  final List<_MockAppt> _canceled = [
-    const _MockAppt(
-      name: 'سمير ياسر',
-      service: 'التمريض · الحقن',
-      time: '2:00 م',
-      date: 'اليوم',
-      place: 'غزة، الرمال',
-      cancel: _Cancel.declined,
-    ),
-    const _MockAppt(
-      name: 'نور خليل',
-      service: 'العلاج الطبيعي · تأهيل الظهر',
-      time: '4:00 م',
-      date: 'أمس',
-      place: 'غزة، تل الهوى',
-      cancel: _Cancel.byPatient,
-    ),
-    const _MockAppt(
-      name: 'يوسف عادل',
-      service: 'التمريض · قياس السكر',
-      time: '12:00 م',
-      date: 'الثلاثاء',
-      place: 'غزة، الرمال',
-      cancel: _Cancel.expired,
-    ),
-  ];
+  List<ProviderAppointment> get _done =>
+      _all.where((a) => a.status == ProviderApptStatus.completed).toList();
+
+  List<ProviderAppointment> get _canceled => _all
+      .where(
+        (a) =>
+            a.status == ProviderApptStatus.declined ||
+            a.status == ProviderApptStatus.canceledByPatient ||
+            a.status == ProviderApptStatus.expired,
+      )
+      .toList();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.tabRequest?.addListener(_onTabRequest);
+  }
+
+  void _onTabRequest() {
+    setState(() => _tab = widget.tabRequest!.value);
+  }
 
   @override
   void dispose() {
+    widget.tabRequest?.removeListener(_onTabRequest);
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -150,10 +71,10 @@ class _ProviderAppointmentsScreenState
     return n.isEmpty ? '?' : n[0];
   }
 
-  List<_MockAppt> _filter(List<_MockAppt> list) {
+  List<ProviderAppointment> _filter(List<ProviderAppointment> list) {
     final q = _searchCtrl.text.trim();
     if (q.isEmpty) return list;
-    return list.where((a) => a.name.contains(q)).toList();
+    return list.where((a) => a.patientName.contains(q)).toList();
   }
 
   Future<void> _refresh() async {
@@ -161,126 +82,27 @@ class _ProviderAppointmentsScreenState
     await Future.delayed(const Duration(milliseconds: 600));
   }
 
-  Future<bool?> _dialog({
-    required String title,
-    required String message,
-    required String confirmText,
-    String? cancelText,
-    bool danger = false,
-  }) {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Dialog(
-          backgroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.neutralDarkActive,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.neutralDark,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    if (cancelText != null) ...[
-                      Expanded(
-                        child: AppButton(
-                          height: 44,
-                          fontSize: 13,
-                          text: cancelText,
-                          backgroundColor: AppColors.white,
-                          foregroundColor: AppColors.neutralDarkActive,
-                          borderColor: AppColors.border,
-                          onPressed: () => Navigator.pop(ctx, false),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: AppButton(
-                        height: 44,
-                        fontSize: 13,
-                        text: confirmText,
-                        backgroundColor:
-                            danger ? AppColors.error700 : AppColors.primary600,
-                        onPressed: () => Navigator.pop(ctx, true),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _accept(_MockAppt a) async {
-    // 🔥 لاحقاً: تحديث حالة الحجز إلى "مؤكد" في Firebase
-    setState(() {
-      _pending.remove(a);
-      _upcoming.add(a);
-    });
-    await _dialog(
+  Future<void> _accept(ProviderAppointment a) async {
+    ProviderAppointmentRepository.accept(a.id);
+    await showProviderDialog(
+      context,
       title: 'تم قبول الطلب',
       message: 'ستجد الموعد ضمن المواعيد القادمة.',
       confirmText: 'حسناً',
     );
   }
 
-  Future<void> _decline(_MockAppt a) async {
-    final ok = await _dialog(
-      title: 'رفض الطلب',
-      message: 'هل تريد رفض طلب ${a.name}؟',
-      confirmText: 'رفض الطلب',
-      cancelText: 'إلغاء',
-      danger: true,
-    );
-    if (ok != true) return;
-    // 🔥 لاحقاً: تحديث الحالة إلى "مرفوض" مع سبب الرفض
-    setState(() {
-      _pending.remove(a);
-      _canceled.insert(
-        0,
-        _MockAppt(
-          name: a.name,
-          service: a.service,
-          time: a.time,
-          date: a.date,
-          place: a.place,
-          cancel: _Cancel.declined,
-        ),
-      );
-    });
+  Future<void> _decline(ProviderAppointment a) async {
+    final reason = await showProviderDeclineSheet(context);
+    if (reason == null) return;
+    ProviderAppointmentRepository.decline(a.id, reason);
   }
 
-  void _showDetails() {
-    // 🔥 لاحقاً: فتح شاشة تفاصيل الموعد
-    _dialog(
-      title: 'قريباً',
-      message: 'شاشة تفاصيل الموعد قيد التجهيز.',
-      confirmText: 'حسناً',
+  void _showDetails(ProviderAppointment a) {
+    Navigator.pushNamed(
+      context,
+      'ProviderAppointmentDetails',
+      arguments: a.id,
     );
   }
 
@@ -384,10 +206,8 @@ class _ProviderAppointmentsScreenState
               if (showBadge) ...[
                 const SizedBox(width: 4),
                 Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
+                  height: 16,
+                  constraints: const BoxConstraints(minWidth: 16),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -572,14 +392,14 @@ class _ProviderAppointmentsScreenState
 
   /// بطاقة موعد واحدة. green = مؤكد، extra = زر أو رقم هاتف أسفلها
   Widget _card(
-    _MockAppt a, {
+    ProviderAppointment a, {
     required Widget chip,
     bool green = false,
     Widget? extra,
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _showDetails,
+      onTap: () => _showDetails(a),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -591,14 +411,14 @@ class _ProviderAppointmentsScreenState
           children: [
             Row(
               children: [
-                _avatar(a.name),
+                _avatar(a.patientName),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        a.name,
+                        a.patientName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -760,20 +580,24 @@ class _ProviderAppointmentsScreenState
     ];
   }
 
-  Widget _cancelChip(_Cancel? c) {
-    return switch (c) {
-      _Cancel.declined => _chip('مرفوض', AppColors.error50, AppColors.error800),
-      _Cancel.byPatient => _chip(
+  Widget _cancelChip(ProviderApptStatus status) {
+    return switch (status) {
+      ProviderApptStatus.declined => _chip(
+        'مرفوض',
+        AppColors.error50,
+        AppColors.error800,
+      ),
+      ProviderApptStatus.canceledByPatient => _chip(
         'ألغاه المريض',
         AppColors.neutralLight,
         AppColors.neutralDarkActive,
       ),
-      _Cancel.expired => _chip(
+      ProviderApptStatus.expired => _chip(
         'انتهت المهلة',
         AppColors.neutralLight,
         AppColors.neutralDarkActive,
       ),
-      null => _chip('ملغي', AppColors.neutralLight, AppColors.neutralDarkActive),
+      _ => _chip('ملغي', AppColors.neutralLight, AppColors.neutralDarkActive),
     };
   }
 
@@ -793,7 +617,7 @@ class _ProviderAppointmentsScreenState
     return [
       _heading('الملغاة والمرفوضة'),
       for (final a in list) ...[
-        _card(a, chip: _cancelChip(a.cancel)),
+        _card(a, chip: _cancelChip(a.status)),
         const SizedBox(height: 8),
       ],
     ];
@@ -817,44 +641,49 @@ class _ProviderAppointmentsScreenState
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              children: [
-                const Text(
-                  'المواعيد',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.neutralDarkActive,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _searchField(),
-                const SizedBox(height: 16),
-                _tabBar(),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: RefreshIndicator(
-                    color: AppColors.primary600,
-                    onRefresh: _refresh,
-                    child: ListView(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: _content(),
+      child: ValueListenableBuilder<List<ProviderAppointment>>(
+        valueListenable: ProviderAppointmentRepository.appointments,
+        builder: (context, _, _) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'المواعيد',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutralDarkActive,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    _searchField(),
+                    const SizedBox(height: 16),
+                    _tabBar(),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: RefreshIndicator(
+                        color: AppColors.primary600,
+                        onRefresh: _refresh,
+                        child: ListView(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: _content(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -167,7 +167,7 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_left_rounded,
+                  Icons.chevron_right_rounded,
                   size: 18,
                   color: AppColors.neutralDark,
                 ),

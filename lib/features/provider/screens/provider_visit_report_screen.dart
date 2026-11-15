@@ -378,8 +378,8 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
                       tooltip: 'رجوع',
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 28,
+                        Icons.arrow_back_ios_new,
+                        size: 20,
                         color: AppColors.neutralDarkActive,
                       ),
                     ),

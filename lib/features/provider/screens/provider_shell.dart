@@ -17,12 +17,26 @@ class ProviderShell extends StatefulWidget {
 class _ProviderShellState extends State<ProviderShell> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    ProviderHomeScreen(),
-    ProviderAppointmentsScreen(),
-    ProviderPatientsScreen(),
-    ProviderMyProfileScreen(),
+  final _appointmentsTab = ValueNotifier<int>(0);
+
+  // يفتح صفحة المواعيد على التبويب المطلوب
+  void _openAppointments(int tab) {
+    _appointmentsTab.value = tab;
+    setState(() => _currentIndex = 1);
+  }
+
+  late final List<Widget> _pages = [
+    ProviderHomeScreen(onOpenAppointments: _openAppointments),
+    ProviderAppointmentsScreen(tabRequest: _appointmentsTab),
+    const ProviderPatientsScreen(),
+    const ProviderMyProfileScreen(),
   ];
+
+  @override
+  void dispose() {
+    _appointmentsTab.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

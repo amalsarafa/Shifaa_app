@@ -18,8 +18,8 @@ class ProviderPatientProfileScreen extends StatelessWidget {
             tooltip: 'رجوع',
             onPressed: () => Navigator.pop(context),
             icon: const Icon(
-              Icons.chevron_right_rounded,
-              size: 28,
+              Icons.arrow_back_ios_new,
+              size: 20,
               color: AppColors.neutralDarkActive,
             ),
           ),
@@ -267,7 +267,7 @@ class ProviderPatientProfileScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Icon(
-              Icons.chevron_left_rounded,
+              Icons.chevron_right_rounded,
               size: 18,
               color: AppColors.neutralDark,
             ),
