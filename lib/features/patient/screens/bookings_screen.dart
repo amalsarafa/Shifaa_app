@@ -1,11 +1,17 @@
 // lib/features/patient/screens/bookings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:my_first_app/core/screens/visit_report_view_screen.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/screens/provider_profile_screen.dart';
 import 'package:my_first_app/features/patient/services/appointment_model.dart';
 import 'package:my_first_app/features/patient/services/appointment_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/widgets/appointment_card.dart';
+import 'package:my_first_app/features/patient/widgets/confirm_visit_sheet.dart';
+
+/// نوع نافذة الإشعار بعد الإجراء
+enum _DoneKind { success, canceled }
 
 class BookingsScreen extends StatefulWidget {
   final ValueChanged<int>? onGoToTab;
@@ -34,9 +40,17 @@ class _BookingsScreenState extends State<BookingsScreen> {
   // ───────────────────────── مساعدات ─────────────────────────
   List<Appointment> _filtered(List<Appointment> all) {
     final allowed = switch (_tab) {
-      0 => const {AppointmentStatus.pending, AppointmentStatus.confirmed},
+      0 => const {
+        AppointmentStatus.pending,
+        AppointmentStatus.confirmed,
+        AppointmentStatus.awaitingConfirmation,
+      },
       1 => const {AppointmentStatus.completed},
-      _ => const {AppointmentStatus.canceled, AppointmentStatus.rejected},
+      _ => const {
+        AppointmentStatus.canceled,
+        AppointmentStatus.rejected,
+        AppointmentStatus.notDone,
+      },
     };
     final query = _searchCtrl.text.trim();
 
@@ -177,6 +191,38 @@ class _BookingsScreenState extends State<BookingsScreen> {
     );
   }
 
+  /// سطر "عرض تفاصيل الزيارة" أسفل البطاقة المكتملة
+  Widget _detailsLink(Appointment a) {
+    return InkWell(
+      onTap: () => _openDetails(a),
+      borderRadius: BorderRadius.circular(12),
+      child: const SizedBox(
+        height: 40,
+        width: double.infinity,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'عرض تفاصيل الزيارة',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary600,
+              ),
+            ),
+            SizedBox(width: 4),
+            // في RTL يُعكس تلقائياً فيظهر ‹ لليسار
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AppColors.primary600,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _reasonText(String text) {
     return Text(
       text,
@@ -196,22 +242,55 @@ class _BookingsScreenState extends State<BookingsScreen> {
           borderColor: AppColors.error100,
           onPressed: () => _confirmCancel(a),
         );
-      case AppointmentStatus.completed:
-        return Row(
+      case AppointmentStatus.awaitingConfirmation:
+        return _cardButton(
+          label: 'تأكيد الزيارة',
+          background: AppColors.primary600,
+          foreground: AppColors.white,
+          borderColor: null,
+          onPressed: () => _openConfirmVisit(a),
+        );
+      case AppointmentStatus.notDone:
+        final reason = a.notDoneReason?.trim() ?? '';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: a.rating != null
-                  ? _ratingBox(a.rating!)
-                  : _cardButton(
-                      label: 'قيّم الزيارة',
-                      background: AppColors.primary600,
-                      foreground: AppColors.white,
-                      borderColor: null,
-                      onPressed: () => _openRating(a),
-                    ),
+            _reasonText(
+              reason.isEmpty
+                  ? 'أبلغت أن الزيارة لم تتم · قيد مراجعة فريق الدعم'
+                  : 'أبلغت: $reason · قيد مراجعة فريق الدعم',
             ),
-            const SizedBox(width: 8),
-            Expanded(child: _rebookButton(a)),
+            const SizedBox(height: 8),
+            _cardButton(
+              label: 'تواصل مع الدعم',
+              onPressed: () => Navigator.pushNamed(context, 'Help'),
+            ),
+          ],
+        );
+      case AppointmentStatus.completed:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: a.rating != null
+                      ? _ratingBox(a.rating!)
+                      : _cardButton(
+                          label: 'قيّم الزيارة',
+                          background: AppColors.primary600,
+                          foreground: AppColors.white,
+                          borderColor: null,
+                          onPressed: () => _openRating(a),
+                        ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: _rebookButton(a)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1, thickness: 1, color: _border),
+            const SizedBox(height: 8),
+            _detailsLink(a),
           ],
         );
       case AppointmentStatus.canceled:
@@ -307,7 +386,51 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
     if (confirmed != true || !mounted) return;
     AppointmentRepository.cancel(a.id);
-    _showDone('تم إلغاء الطلب', 'انتقل طلبك إلى تبويب الملغاة.');
+    _showDone(
+      'تم إلغاء الطلب',
+      'انتقل طلبك إلى تبويب الملغاة.',
+      kind: _DoneKind.canceled,
+    );
+  }
+
+  /// بعد الحوار ننقل المريض للتبويب اللي انتقلت له البطاقة
+  Future<void> _openConfirmVisit(Appointment a) async {
+    final status = await ConfirmVisitSheet.show(context, a);
+    if (!mounted) return;
+
+    final tab = switch (status) {
+      AppointmentStatus.completed => 1,
+      AppointmentStatus.notDone => 2,
+      _ => null,
+    };
+    if (tab != null) setState(() => _tab = tab);
+  }
+
+  /// صفحة "تفاصيل الزيارة" المشتركة.
+  /// نقرأ الحجز من المستودع وقت الضغط، فيظهر أحدث تقييم دائماً.
+  void _openDetails(Appointment a) {
+    final latest = AppointmentRepository.appointments.value
+            .where((x) => x.id == a.id)
+            .firstOrNull ??
+        a;
+
+    Navigator.pushNamed(
+      context,
+      'VisitReportView',
+      arguments: ReportViewArgs(
+        title: 'تفاصيل الزيارة',
+        report: latest.report,
+        providerName: latest.provider.name,
+        providerRole: latest.provider.role,
+        providerImage: latest.provider.image,
+        service: latest.service.title,
+        date: AppointmentFormat.date(latest.date),
+        time: AppointmentFormat.time(latest.time),
+        address: '${latest.address.title}، ${latest.address.details}',
+        rating: latest.rating,
+        comment: latest.comment,
+      ),
+    );
   }
 
   Future<void> _openRating(Appointment a) async {
@@ -320,7 +443,11 @@ class _BookingsScreenState extends State<BookingsScreen> {
     _showDone('تم إرسال تقييمك', 'شكراً لك على مشاركة رأيك.');
   }
 
-  void _showDone(String title, String message) {
+  void _showDone(
+    String title,
+    String message, {
+    _DoneKind kind = _DoneKind.success,
+  }) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => Directionality(
@@ -337,19 +464,23 @@ class _BookingsScreenState extends State<BookingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary600,
-                    shape: BoxShape.circle,
+                // الإلغاء لا يستخدم علامة الصح
+                if (kind == _DoneKind.success)
+                  const SuccessCheck(size: 72)
+                else
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: AppColors.neutralLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.event_busy_outlined,
+                      size: 32,
+                      color: AppColors.neutralDarkActive,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    size: 32,
-                    color: AppColors.white,
-                  ),
-                ),
                 const SizedBox(height: 16),
                 Text(
                   title,
@@ -400,7 +531,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Widget _card(Appointment a) {
-    return AppointmentCard(appointment: a, footer: _actions(a));
+    // البطاقة المكتملة كلها تفتح تفاصيل الزيارة
+    final completed = a.status == AppointmentStatus.completed;
+    return AppointmentCard(
+      appointment: a,
+      footer: _actions(a),
+      onTap: completed ? () => _openDetails(a) : null,
+    );
   }
 
   List<Widget> _currentSections(List<Appointment> list) {
@@ -409,6 +546,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
         .toList();
     final pending = list
         .where((a) => a.status == AppointmentStatus.pending)
+        .toList();
+    final awaiting = list
+        .where((a) => a.status == AppointmentStatus.awaitingConfirmation)
         .toList();
 
     return [
@@ -419,6 +559,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
       if (pending.isNotEmpty) ...[
         _sectionTitle('الحجوزات بانتظار الموافقة'),
         ...pending.map(_card),
+      ],
+      if (awaiting.isNotEmpty) ...[
+        _sectionTitle('زيارات بانتظار تأكيدك'),
+        ...awaiting.map(_card),
       ],
     ];
   }

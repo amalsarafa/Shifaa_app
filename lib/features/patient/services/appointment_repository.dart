@@ -1,5 +1,6 @@
 // lib/features/patient/services/appointment_repository.dart
 import 'package:flutter/foundation.dart';
+import 'package:my_first_app/core/models/visit_report.dart';
 import 'package:my_first_app/features/patient/services/address_model.dart';
 import 'package:my_first_app/features/patient/services/appointment_model.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
@@ -63,7 +64,19 @@ class AppointmentRepository {
         time: '11:00',
         address: address,
         status: AppointmentStatus.completed,
+        report: const VisitReport(
+          summary:
+              'تم تنظيف الجرح وتغيير الضماد. الجرح يلتئم بشكل جيد ولا توجد علامات التهاب.',
+          procedures: ['تنظيف الجرح', 'تغيير الضماد', 'قياس الحرارة'],
+          temperature: '36.9',
+          pulse: '76',
+          recommendations:
+              'الحفاظ على الضماد جافاً، وتغييره بعد يومين. التواصل عند ظهور احمرار أو ألم.',
+          followUp: true,
+          writtenAt: 'قبل أسبوع',
+        ),
       ),
+      // الحجز '4' بدون تقرير، لتجربة حالة "لم يُكتب تقرير"
       Appointment(
         id: '4',
         provider: ali,
@@ -94,6 +107,26 @@ class AppointmentRepository {
         time: '17:00',
         address: address,
         status: AppointmentStatus.rejected,
+      ),
+      Appointment(
+        id: '7',
+        provider: sarah,
+        service: wounds,
+        categoryTitle: category,
+        date: day(0),
+        time: '09:00',
+        address: address,
+        status: AppointmentStatus.awaitingConfirmation,
+        // كتبته مقدمة الرعاية عند إنهاء الزيارة، ويظهر بعد تأكيد المريض
+        report: const VisitReport(
+          summary:
+              'تم تغيير ضماد الجرح وتعقيمه، وقياس الضغط والسكر. الحالة مستقرة.',
+          procedures: ['تعقيم الجرح', 'تغيير الضماد', 'قياس الضغط', 'قياس السكر'],
+          bloodPressure: '125/82',
+          sugar: '118',
+          recommendations: 'تجنّب تبليل الجرح، والالتزام بالمضاد الحيوي حتى نهايته.',
+          writtenAt: 'اليوم',
+        ),
       ),
     ];
   }
@@ -126,6 +159,23 @@ class AppointmentRepository {
 
   static void cancel(String id) {
     _update(id, (a) => a.copyWith(status: AppointmentStatus.canceled));
+  }
+
+  /// المريض أكّد أن الزيارة تمت
+  static void confirmVisit(String id) {
+    _update(id, (a) => a.copyWith(status: AppointmentStatus.completed));
+  }
+
+  /// المريض أبلغ أن الزيارة لم تتم
+  /// 🔥 لاحقاً: يُرسل البلاغ لفريق شفاء للمراجعة
+  static void reportVisitNotDone(String id, String reason) {
+    _update(
+      id,
+      (a) => a.copyWith(
+        status: AppointmentStatus.notDone,
+        notDoneReason: reason,
+      ),
+    );
   }
 
   static void rate(String id, double rating, String comment) {

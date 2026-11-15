@@ -1,7 +1,18 @@
+import 'package:my_first_app/core/models/visit_report.dart';
 import 'package:my_first_app/features/patient/services/address_model.dart';
 import 'package:my_first_app/features/patient/services/service_models.dart';
 
-enum AppointmentStatus { pending, confirmed, completed, canceled, rejected }
+enum AppointmentStatus {
+  pending,
+  confirmed,
+  // أنهى مقدم الرعاية الزيارة، وننتظر تأكيد المريض
+  awaitingConfirmation,
+  completed,
+  // أبلغ المريض أن الزيارة لم تتم، وهي قيد مراجعة فريق الدعم
+  notDone,
+  canceled,
+  rejected,
+}
 
 class Appointment {
   final String id;
@@ -16,6 +27,12 @@ class Appointment {
   final double? rating;
   final String? comment;
 
+  /// سبب البلاغ عندما يقول المريض إن الزيارة لم تتم
+  final String? notDoneReason;
+
+  /// تقرير مقدم الرعاية بعد الزيارة (null = لم يُكتب تقرير)
+  final VisitReport? report;
+
   const Appointment({
     required this.id,
     required this.provider,
@@ -28,6 +45,8 @@ class Appointment {
     required this.status,
     this.rating,
     this.comment,
+    this.notDoneReason,
+    this.report,
   });
 
   /// التاريخ مع الوقت، نستخدمه للترتيب
@@ -41,6 +60,8 @@ class Appointment {
     AppointmentStatus? status,
     double? rating,
     String? comment,
+    String? notDoneReason,
+    VisitReport? report,
   }) {
     return Appointment(
       id: id,
@@ -54,6 +75,8 @@ class Appointment {
       status: status ?? this.status,
       rating: rating ?? this.rating,
       comment: comment ?? this.comment,
+      notDoneReason: notDoneReason ?? this.notDoneReason,
+      report: report ?? this.report,
     );
   }
 }

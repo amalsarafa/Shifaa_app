@@ -1,5 +1,9 @@
 // lib/features/provider/services/provider_appointment_model.dart
 import 'package:flutter/foundation.dart';
+import 'package:my_first_app/core/models/visit_report.dart';
+
+// تقرير الزيارة صار مشتركاً في core، نعيد تصديره لملفات مقدم الرعاية
+export 'package:my_first_app/core/models/visit_report.dart';
 
 enum ProviderApptStatus {
   pending,
@@ -36,33 +40,6 @@ class PatientMedicalInfo {
     required this.medications,
     required this.emergencyName,
     required this.emergencyPhone,
-  });
-}
-
-/// تقرير الزيارة، لا تصير الزيارة مكتملة إلا بعد حفظه
-class VisitReport {
-  final String summary;
-  final List<String> procedures;
-  final String bloodPressure;
-  final String sugar;
-  final String temperature;
-  final String pulse;
-  final String recommendations;
-  final bool followUp;
-  final bool cashReceived;
-  final String writtenAt;
-
-  const VisitReport({
-    required this.summary,
-    this.procedures = const [],
-    this.bloodPressure = '',
-    this.sugar = '',
-    this.temperature = '',
-    this.pulse = '',
-    this.recommendations = '',
-    this.followUp = false,
-    this.cashReceived = true,
-    this.writtenAt = '',
   });
 }
 

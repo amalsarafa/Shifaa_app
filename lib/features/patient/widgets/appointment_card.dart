@@ -115,10 +115,20 @@ class AppointmentCard extends StatelessWidget {
         AppColors.white,
       ),
       AppointmentStatus.pending => ('قيد الانتظار', _pendingBg, _pendingText),
+      AppointmentStatus.awaitingConfirmation => (
+        'بانتظار تأكيد الزيارة',
+        AppColors.infoLight,
+        AppColors.infoDark,
+      ),
       AppointmentStatus.completed => (
         'مكتمل',
         AppColors.primary50,
         AppColors.primary800,
+      ),
+      AppointmentStatus.notDone => (
+        'لم تتم',
+        AppColors.error50,
+        AppColors.error800,
       ),
       AppointmentStatus.canceled => (
         'ملغي',

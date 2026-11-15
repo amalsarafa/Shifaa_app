@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_first_app/core/screens/visit_report_view_screen.dart';
 import 'package:my_first_app/features/auth/screens/login.dart';
 import 'package:my_first_app/features/auth/screens/terms_screen.dart';
 import 'package:my_first_app/features/auth/screens/verification_screen.dart';
@@ -16,6 +17,7 @@ import 'package:my_first_app/features/patient/screens/provider_profile_screen.da
 import 'package:my_first_app/features/patient/screens/service_details_screen.dart';
 import 'package:my_first_app/features/patient/screens/services_screen.dart';
 import 'package:my_first_app/features/patient/screens/personal_info_screen.dart';
+import 'package:my_first_app/features/patient/screens/change_phone_screen.dart';
 import 'package:my_first_app/features/patient/screens/edit_personal_info_screen.dart';
 import 'package:my_first_app/features/patient/screens/addresses_screen.dart';
 import 'package:my_first_app/features/patient/screens/address_form_screen.dart';
@@ -57,11 +59,13 @@ class AppRoutes {
     "ServiceDetails": (context) => ServiceDetailsScreen(),
     "ProviderProfile": (context) => ProviderProfileScreen(),
     "Bookings": (context) => BookingsScreen(),
+    "VisitReportView": (context) => const VisitReportViewScreen(),
     "BookService": (context) => BookServiceScreen(),
     "BookingConfirmation": (context) => BookingConfirmationScreen(),
     "PersonalProfileScreen": (context) => PersonalProfileScreen(),
     "PersonalInfo": (context) => const PersonalInfoScreen(),
     "EditPersonalInfo": (context) => const EditPersonalInfoScreen(),
+    "ChangePhone": (context) => const ChangePhoneScreen(),
     "Help": (context) => const HelpScreen(),
     "Addresses": (context) => const AddressesScreen(),
     "AddAddress": (context) => const AddressFormScreen(),

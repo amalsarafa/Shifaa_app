@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/widgets/patient_avatar.dart';
@@ -128,19 +129,7 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    size: 28,
-                    color: AppColors.primary700,
-                  ),
-                ),
+                const SuccessCheck(size: 64),
                 const SizedBox(height: 8),
                 const Text(
                   'تم حفظ التغييرات',
@@ -243,46 +232,45 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
     );
   }
 
-  Widget _phoneField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: AppColors.neutralLight,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _border),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _patient.phone,
-                  textDirection: TextDirection.ltr,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.neutralNormal,
-                  ),
+   Widget _phoneField() {
+    // ValueListenableBuilder عشان الرقم يتحدّث لما نرجع من شاشة التغيير
+    return ValueListenableBuilder<Patient>(
+      valueListenable: PatientRepository.current,
+      builder: (context, patient, _) => Container(
+        height: 48,
+        padding: const EdgeInsetsDirectional.only(start: 16, end: 4),
+        decoration: BoxDecoration(
+          color: AppColors.neutralLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                patient.phone,
+                textDirection: TextDirection.ltr,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutralDarkActive,
                 ),
               ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 18,
-                color: AppColors.neutralNormal,
+            ),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, 'ChangePhone'),
+              child: const Text(
+                'تغيير',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary500,
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'رقم الهاتف مرتبط بتسجيل الدخول، ولا يمكن تغييره حالياً.',
-          style: TextStyle(fontSize: 11, color: AppColors.neutralDark),
-        ),
-      ],
+      ),
     );
   }
 

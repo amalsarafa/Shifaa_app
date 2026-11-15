@@ -8,6 +8,8 @@ class AppColors {
   static const star         = Color(0xFFFFB400); // نجوم التقييم
   static const warningLight = Color(0xFFFFF0CC); // خلفية "قيد الانتظار"
   static const warningDark  = Color(0xFF6B4700); // نص "قيد الانتظار"
+  static const infoLight    = Color(0xFFE3EEFB); // خلفية "بانتظار تأكيد الزيارة"
+  static const infoDark     = Color(0xFF1E4F8A); // نص "بانتظار تأكيد الزيارة"
   // Primary
   static const primary50 =  Color(0xFFEBF7F6);
   static const primary100 = Color(0xFFC2E6E4);

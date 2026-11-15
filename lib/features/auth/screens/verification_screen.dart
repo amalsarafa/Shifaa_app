@@ -3,9 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
+import 'package:my_first_app/features/patient/services/patient_repository.dart';
 
 enum _VerifyState { idle, error, success }
+
+/// شو بنبعت لشاشة التحقق: الرقم + هل هو تغيير رقم ولا تسجيل دخول
+class VerificationArgs {
+  final String phone;
+  final bool isChangePhone;
+  const VerificationArgs(this.phone, {this.isChangePhone = false});
+}
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -20,7 +29,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
   static const String _testCode = '1234'; // الكود الثابت للتجربة
 
   static const String _shieldIcon = 'assets/icons/shield_check.svg';
-  static const String _successIcon = 'assets/icons/success_check.svg';
 
   final TextEditingController _codeController = TextEditingController();
   final FocusNode _focus = FocusNode();
@@ -40,6 +48,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
     _codeController.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  // تسجيل الدخول بيبعت String، وتغيير الرقم بيبعت VerificationArgs
+  VerificationArgs get _args {
+    final a = ModalRoute.of(context)?.settings.arguments;
+    if (a is VerificationArgs) return a;
+    return VerificationArgs((a as String?) ?? '');
   }
 
   void _startTimer() {
@@ -83,10 +98,24 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
   }
 
-  void _continue() {
+  Future<void> _continue() async {
+    // حالة تغيير رقم الهاتف
+    if (_args.isChangePhone) {
+      await PatientRepository.updatePhone(_args.phone);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      // نرجع لصفحة تعديل الملف الشخصي
+      Navigator.popUntil(context, ModalRoute.withName('EditPersonalInfo'));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('تم تغيير رقم الهاتف بنجاح')),
+      );
+      return;
+    }
+
+    // حالة تسجيل الدخول
     Navigator.pushNamedAndRemoveUntil(
       context,
-      'Home', // غيّريه حسب الـ route عندك
+      'Home',
       (route) => false,
     );
   }
@@ -128,7 +157,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       decoration: BoxDecoration(shape: BoxShape.circle, color: _haloColor),
       child: Center(
         child: success
-            ? SvgPicture.asset(_successIcon, width: 64, height: 64)
+            ? const SuccessCheck(size: 72)
             : Container(
                 width: 64,
                 height: 64,
@@ -333,8 +362,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String phone =
-        (ModalRoute.of(context)?.settings.arguments as String?) ?? '';
+    final String phone = _args.phone;
+    final bool isChangePhone = _args.isChangePhone;
     final bool success = _state == _VerifyState.success;
 
     return Directionality(
@@ -365,7 +394,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
                       Text(
                         success
-                            ? 'تم التحقق من رقم هاتفك بنجاح'
+                            ? (isChangePhone
+                                ? 'تم تغيير رقم هاتفك بنجاح'
+                                : 'تم التحقق من رقم هاتفك بنجاح')
                             : 'أدخل الرمز المكوّن من 4 أرقام المرسل إلى',
                         textAlign: TextAlign.center,
                         style: TextStyle(

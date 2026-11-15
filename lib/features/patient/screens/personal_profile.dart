@@ -294,11 +294,6 @@ class PersonalProfileScreen extends StatelessWidget {
                     onTap: () => _open(context, 'MedicalRecord'),
                   ),
                   _row(
-                    icon: Icons.history_rounded,
-                    label: 'سجل الزيارات',
-                    onTap: () => _open(context, 'VisitHistory'),
-                  ),
-                  _row(
                     icon: Icons.settings_outlined,
                     label: 'الإعدادات',
                     onTap: () => _open(context, 'Settings'),

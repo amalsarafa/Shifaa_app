@@ -10,6 +10,7 @@ import 'package:my_first_app/features/patient/services/appointment_repository.da
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/widgets/appointment_card.dart';
+import 'package:my_first_app/features/patient/widgets/confirm_visit_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   final ValueChanged<int>? onGoToTab;
@@ -31,10 +32,23 @@ class _HomeScreenState extends State<HomeScreen>
 
   final _searchCtrl = TextEditingController();
 
+  // حوار تأكيد الزيارة يُفتح تلقائياً مرة واحدة فقط بكل جلسة
+  static bool _visitPromptShown = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _promptVisit());
+  }
+
+  void _promptVisit() {
+    if (_visitPromptShown || !mounted) return;
+    final waiting = AppointmentRepository.appointments.value.where(
+      (a) => a.status == AppointmentStatus.awaitingConfirmation,
+    );
+    if (waiting.isEmpty) return;
+    _visitPromptShown = true;
+    ConfirmVisitSheet.show(context, waiting.first);
   }
 
   @override

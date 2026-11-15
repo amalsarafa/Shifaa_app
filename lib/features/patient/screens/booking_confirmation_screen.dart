@@ -1,6 +1,7 @@
 // lib/features/patient/screens/booking_confirmation_screen.dart
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/screens/book_service_screen.dart'; // BookingDraft
 import 'package:my_first_app/features/patient/services/appointment_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
@@ -139,28 +140,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
               ),
             ),
-            Container(
-              width: 112,
-              height: 112,
-              decoration: const BoxDecoration(
-                color: AppColors.primary50,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary600,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 40,
-                  color: AppColors.white,
-                ),
-              ),
-            ),
+            const SuccessCheck(size: 80),
             const SizedBox(height: 24),
             const Text(
               'تم إرسال طلبك بنجاح!',

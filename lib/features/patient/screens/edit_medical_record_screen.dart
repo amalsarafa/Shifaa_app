@@ -1,6 +1,7 @@
 // lib/features/patient/screens/edit_medical_record_screen.dart
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/services/medical_record_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
@@ -239,19 +240,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    size: 28,
-                    color: AppColors.primary700,
-                  ),
-                ),
+                const SuccessCheck(size: 64),
                 const SizedBox(height: 8),
                 const Text(
                   'تم حفظ السجل الطبي',

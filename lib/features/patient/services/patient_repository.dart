@@ -150,6 +150,26 @@ class PatientRepository {
       defaultAddressIndex: p.defaultAddressIndex,
     );
   }
+    /// تغيير رقم الهاتف، بعد التحقق من الرقم الجديد بالكود
+  static Future<void> updatePhone(String phone) async {
+    final p = current.value;
+    // 🔥 لاحقاً: FirebaseAuth updatePhoneNumber + تحديث جدول users
+    current.value = Patient(
+      id: p.id,
+      name: p.name,
+      phone: phone,
+      email: p.email,
+      gender: p.gender,
+      birthDate: p.birthDate,
+      photo: p.photo,
+      addresses: p.addresses,
+      defaultAddressIndex: p.defaultAddressIndex,
+    );
+  }
+
+  /// "591234567" ← "+970 59 123 4567"
+  static String formatPhone(String digits) =>
+      '+970 ${digits.substring(0, 2)} ${digits.substring(2, 5)} ${digits.substring(5)}';
 
   // ───────────────────────── العناوين ─────────────────────────
   static void _setAddresses(List<Address> addresses, int defaultIndex) {
