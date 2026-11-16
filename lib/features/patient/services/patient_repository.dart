@@ -96,16 +96,16 @@ class PatientRepository {
       addresses: const [
         Address(
           id: 'addr_1',
-          title: 'مدينة غزة، حي الرمال',
+          title: 'غزة',
           details: 'شارع عمر المختار، بناية 12، الطابق الثالث',
-          areaId: 'rimal',
+          areaId: 'gaza',
           landmark: 'مقابل صيدلية الشفاء',
         ),
         Address(
           id: 'addr_2',
           title: 'مدينة غزة، تل الهوا',
           details: 'شارع الجامعة، بناية 5، الطابق الأول',
-          areaId: 'tal_alhawa',
+          areaId: 'gaza',
           landmark: 'بجانب مسجد الهدى',
         ),
       ],

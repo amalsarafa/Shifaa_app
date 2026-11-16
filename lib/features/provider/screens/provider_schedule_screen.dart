@@ -1,5 +1,6 @@
 // lib/features/provider/screens/provider_schedule_screen.dart
 import 'package:flutter/material.dart';
+import 'package:my_first_app/core/constants/gaza_governorates.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/provider/services/provider_profile_repository.dart';
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
@@ -16,11 +17,15 @@ class ProviderScheduleScreen extends StatefulWidget {
 class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
   late final List<ProviderWorkDay> _days =
       ProviderProfileRepository.workDays.map((d) => d.copy()).toList();
-  late final Set<String> _areas = {...ProviderProfileRepository.areas};
+  // فاضية إذا المحفوظ مش من المحافظات
+  late String? _governorate =
+      governorateName(ProviderProfileRepository.governorateId).isEmpty
+          ? null
+          : ProviderProfileRepository.governorateId;
 
   double _minutes(TimeOfDay t) => t.hour * 60.0 + t.minute;
 
-  /// هل تغيّر يوم أو ساعة أو منطقة عن المحفوظ؟
+  /// هل تغيّر يوم أو ساعة أو المحافظة عن المحفوظ؟
   bool get _hasChanges {
     final saved = ProviderProfileRepository.workDays;
     for (var i = 0; i < _days.length; i++) {
@@ -30,14 +35,23 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
         return true;
       }
     }
-    final areas = ProviderProfileRepository.areas;
-    return _areas.length != areas.length || !_areas.containsAll(areas);
+    return _governorate != ProviderProfileRepository.governorateId;
   }
 
-  Future<void> _pickTime(ProviderWorkDay d, {required bool isFrom}) async {
+    Future<void> _pickTime(ProviderWorkDay d, {required bool isFrom}) async {
     final picked = await showTimePicker(
       context: context,
       initialTime: isFrom ? d.from : d.to,
+      initialEntryMode: TimePickerEntryMode.input,
+      helpText: isFrom ? 'وقت البداية' : 'وقت النهاية',
+      cancelText: 'إلغاء',
+      confirmText: 'تأكيد',
+      hourLabelText: 'الساعة',
+      minuteLabelText: 'الدقيقة',
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child!,
+      ),
     );
     if (picked == null) return;
     setState(() {
@@ -74,8 +88,9 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
         return;
       }
     }
-    if (_areas.isEmpty) {
-      await _warn('اختاري منطقة', 'اختاري منطقة خدمة واحدة على الأقل.');
+    final governorate = _governorate;
+    if (governorate == null) {
+      await _warn('اختاري المحافظة', 'اختاري محافظة الخدمة قبل الحفظ.');
       return;
     }
     for (var i = 0; i < _days.length; i++) {
@@ -84,7 +99,7 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
       src.from = _days[i].from;
       src.to = _days[i].to;
     }
-    ProviderProfileRepository.areas = {..._areas};
+    ProviderProfileRepository.governorateId = governorate;
     if (!mounted) return;
     await showProviderDialog(
       context,
@@ -174,6 +189,96 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
     );
   }
 
+  /// قائمة المحافظات
+  Widget _governorateDropdown() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _governorate,
+          isExpanded: true,
+          borderRadius: BorderRadius.circular(12),
+          dropdownColor: AppColors.white,
+          hint: const Text(
+            'اختاري المحافظة',
+            style: TextStyle(fontSize: 13, color: AppColors.neutralNormal),
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.primary600,
+          ),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutralDarkActive,
+          ),
+          items: [
+            for (final g in gazaGovernorates)
+              DropdownMenuItem(value: g.id, child: Text(g.name)),
+          ],
+          onChanged: (v) => setState(() => _governorate = v),
+        ),
+      ),
+    );
+  }
+
+  /// صورة ثابتة للخريطة حالياً 🔥 لاحقاً: خريطة حقيقية لموقع العمل
+  Widget _mapPreview() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text.rich(
+          TextSpan(
+            text: 'موقع عملك على الخريطة',
+            children: [
+              TextSpan(
+                text: ' (اختياري)',
+                style: TextStyle(
+                  fontWeight: FontWeight.normal,
+                  color: AppColors.neutralDark,
+                ),
+              ),
+            ],
+          ),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutralDarkActive,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 176,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.asset(
+              'assets/images/patient/map_preview.png',
+              width: double.infinity,
+              height: 176,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(color: AppColors.primary50),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'يساعد المرضى على معرفة قربك منهم، ولا يرى المريض موقعك الدقيق.',
+          style: TextStyle(fontSize: 12, color: AppColors.neutralDark),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ProviderSubScaffold(
@@ -196,27 +301,18 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
           const SizedBox(height: 8),
         ],
         const SizedBox(height: 8),
-        const ProviderSectionHeader(
-          'مناطق الخدمة',
-          hint: 'اختاري منطقة أو أكثر',
+        const ProviderSectionHeader('منطقة الخدمة', hint: 'قطاع غزة'),
+        const Text(
+          'المحافظة',
+          style: TextStyle(fontSize: 12, color: AppColors.neutralDark),
         ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final a in ProviderProfileRepository.allAreas)
-              ProviderChoiceChip(
-                label: a,
-                selected: _areas.contains(a),
-                onTap: () => setState(() {
-                  if (!_areas.remove(a)) _areas.add(a);
-                }),
-              ),
-          ],
-        ),
+        const SizedBox(height: 4),
+        _governorateDropdown(),
+        const SizedBox(height: 16),
+        _mapPreview(),
         const SizedBox(height: 16),
         const Text(
-          'يصلك طلبات المرضى في المناطق التي تختارينها فقط، ولا يظهر للمريض إلا اسم المنطقة.',
+          'تصلك طلبات المرضى في محافظتك فقط.',
           style: TextStyle(
             fontSize: 12,
             height: 1.5,

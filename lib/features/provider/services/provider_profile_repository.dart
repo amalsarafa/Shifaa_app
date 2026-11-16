@@ -104,12 +104,8 @@ class ProviderProfileRepository {
     ProviderWorkDay('الجمعة', const TimeOfDay(hour: 9, minute: 0), const TimeOfDay(hour: 17, minute: 0), enabled: false),
   ];
 
-  // مناطق الخدمة
-  static const List<String> allAreas = [
-    'الرمال', 'تل الهوى', 'الشجاعية', 'الدرج',
-    'النصر', 'الصبرة', 'الزيتون', 'الشاطئ',
-  ];
-  static Set<String> areas = {'الرمال', 'تل الهوى', 'النصر'};
+  // محافظة الخدمة (id من gazaGovernorates)
+  static String governorateId = 'gaza';
 
   // التقييمات
   // عدد التقييمات لكل نجمة (5 ← 1). 🔥 لاحقاً: مجاميع محسوبة في Firebase

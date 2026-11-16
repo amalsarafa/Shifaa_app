@@ -387,10 +387,10 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
   }
 
   // ───────────────────────── الطلبات المعلقة ─────────────────────────
-  Widget _requestCard(ProviderAppointment r) {
-    // بدون chip: المهلة ظاهرة بجانب عنوان القسم
+   Widget _requestCard(ProviderAppointment r) {
     return ProviderAppointmentCard(
       appointment: r,
+      chip: providerExpiryChip(r.expires),
       onTap: () => _showDetails(r),
       footer: ProviderRequestActions(
         onAccept: () => _accept(r),
@@ -399,7 +399,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
     );
   }
 
-  Widget _requestsSection() {
+    Widget _requestsSection() {
     final hasRequests = _requests.isNotEmpty;
 
     // الأقرب للانتهاء أولاً
@@ -409,11 +409,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
 
     return Column(
       children: [
-        // مهلة الطلب الأقرب انتهاءً بجانب العنوان
-        _sectionHeader(
-          'طلب بانتظار الرد',
-          trailing: hasRequests ? providerExpiryChip(sorted.first.expires) : null,
-        ),
+        _sectionHeader('طلب بانتظار الرد'),
         if (!hasRequests)
           _emptyCard(
             Icons.inbox_outlined,

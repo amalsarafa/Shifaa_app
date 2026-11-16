@@ -1,5 +1,6 @@
 // lib/features/patient/screens/address_form_screen.dart
 import 'package:flutter/material.dart';
+import 'package:my_first_app/core/constants/gaza_governorates.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/core/widgets/success_check.dart';
 import 'package:my_first_app/features/patient/services/address_model.dart';
@@ -19,7 +20,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       TextStyle(fontSize: 13, color: AppColors.neutralDarkActive);
 
   final _formKey = GlobalKey<FormState>();
-  final _areaCtrl = TextEditingController();
+  String? _governorate; // id المحافظة
   final _detailsCtrl = TextEditingController();
   final _landmarkCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
@@ -47,7 +48,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       // تعديل: نعبّي الحقول بالعنوان الحالي
       _index = arg;
       _original = patient.addresses[arg];
-      _areaCtrl.text = _original!.title;
+      // بيانات قديمة بمنطقة مش من المحافظات: نتركها فاضية
+      final areaId = _original!.areaId;
+      _governorate = governorateName(areaId).isEmpty ? null : areaId;
       _detailsCtrl.text = _original!.details;
       _landmarkCtrl.text = _original!.landmark ?? '';
       _notesCtrl.text = _original!.notes ?? '';
@@ -55,7 +58,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       _originalDefault = _makeDefault;
       _defaultLocked = _makeDefault; // الافتراضي يتغير من صفحة العناوين
       // نعيد البناء مع كل كتابة لتحديث زر الحفظ
-      for (final c in [_areaCtrl, _detailsCtrl, _landmarkCtrl, _notesCtrl]) {
+      for (final c in [_detailsCtrl, _landmarkCtrl, _notesCtrl]) {
         c.addListener(_onEdit);
       }
     } else {
@@ -67,7 +70,6 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
   @override
   void dispose() {
-    _areaCtrl.dispose();
     _detailsCtrl.dispose();
     _landmarkCtrl.dispose();
     _notesCtrl.dispose();
@@ -80,7 +82,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   bool get _hasChanges {
     final o = _original;
     if (!_isEdit || o == null) return true;
-    return _areaCtrl.text.trim() != o.title.trim() ||
+    return _governorate != o.areaId ||
         _detailsCtrl.text.trim() != o.details.trim() ||
         _landmarkCtrl.text.trim() != (o.landmark ?? '').trim() ||
         _notesCtrl.text.trim() != (o.notes ?? '').trim() ||
@@ -95,13 +97,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
     setState(() => _saving = true);
     try {
-      final area = _areaCtrl.text.trim();
+      final governorate = _governorate!; // التحقق يضمن إنها مختارة
       final notes = _notesCtrl.text.trim();
       final address = Address(
         id: _original?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        title: area,
+        title: governorateName(governorate),
         details: _detailsCtrl.text.trim(),
-        areaId: area,
+        areaId: governorate,
         landmark: _landmarkCtrl.text.trim(),
         notes: notes.isEmpty ? null : notes,
         latitude: _original?.latitude,
@@ -255,6 +257,37 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     );
   }
 
+  /// قائمة المحافظات بنفس شكل باقي الحقول
+  Widget _governorateField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label('المحافظة'),
+          DropdownButtonFormField<String>(
+            initialValue: _governorate,
+            isExpanded: true,
+            style: _inputStyle,
+            borderRadius: BorderRadius.circular(16),
+            dropdownColor: AppColors.white,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.primary600,
+            ),
+            decoration: _decoration('اختر المحافظة'),
+            items: [
+              for (final g in gazaGovernorates)
+                DropdownMenuItem(value: g.id, child: Text(g.name)),
+            ],
+            onChanged: (v) => setState(() => _governorate = v),
+            validator: (v) => v == null ? 'هذا الحقل مطلوب' : null,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// صورة ثابتة للخريطة حالياً، ولاحقاً نستبدلها بخريطة حقيقية
   Widget _mapPreview() {
     return Column(
@@ -359,11 +392,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             children: [
               _mapPreview(),
               const SizedBox(height: 16),
-              _field(
-                label: 'المنطقة',
-                controller: _areaCtrl,
-                hint: 'مثال: مدينة غزة، حي الرمال',
-              ),
+              _governorateField(),
               _field(
                 label: 'العنوان بالتفصيل',
                 controller: _detailsCtrl,

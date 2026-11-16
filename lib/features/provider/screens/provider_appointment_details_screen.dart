@@ -288,7 +288,7 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
       _infoRow(
         Icons.payments_outlined,
         'الأجر',
-        '${a.price} ₪ · دفع نقدي عند الزيارة',
+        '${a.price} ₪ · الدفع عند الزيارة   ',
         last: true,
       ),
     );

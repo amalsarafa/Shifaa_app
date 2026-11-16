@@ -34,7 +34,11 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.search_rounded, size: 20, color: AppColors.neutralDark),
+          const Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: AppColors.neutralDark,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -46,7 +50,10 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
               ),
               decoration: const InputDecoration(
                 hintText: 'ابحث باسم المريض',
-                hintStyle: TextStyle(fontSize: 13, color: AppColors.neutralDark),
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.neutralDark,
+                ),
                 border: InputBorder.none,
                 isCollapsed: true,
               ),
@@ -77,26 +84,34 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
       ],
     );
   }
-
+  /// "السبت، 14 نوفمبر" ← "14 نوفمبر" (و"أمس" و"اليوم" تبقى كما هي)
+  String _dateNoDay(String s) {
+    final i = s.indexOf('،');
+    return i == -1 ? s : s.substring(i + 1).trim();
+  }
   Widget _metaItem(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: AppColors.primary600),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary800,
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary800,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _card(BuildContext context, ProviderPatient p) {
+    Widget _card(BuildContext context, ProviderPatient p) {
     final n = p.name.trim();
 
     return GestureDetector(
@@ -176,12 +191,12 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
             const SizedBox(height: 16),
             const Divider(height: 1, thickness: 1, color: _border),
             const SizedBox(height: 16),
-            Row(
+                       Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _metaItem(
                   Icons.calendar_today_outlined,
-                  'آخر زيارة: ${p.lastVisit}',
+                  'آخر زيارة: ${_dateNoDay(p.lastVisit)}',
                 ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -189,7 +204,8 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.primary800,
                     borderRadius: BorderRadius.circular(16),
@@ -278,7 +294,9 @@ class _ProviderPatientsScreenState extends State<ProviderPatientsScreen> {
                   _title(),
                   const SizedBox(height: 8),
                   if (patients.isEmpty)
-                    _empty('لا يوجد مرضى بعد.\nيظهر المريض هنا بعد إنهاء أول زيارة له.')
+                    _empty(
+                      'لا يوجد مرضى بعد.\nيظهر المريض هنا بعد إنهاء أول زيارة له.',
+                    )
                   else if (shown.isEmpty)
                     _empty('لا نتائج مطابقة للبحث.')
                   else

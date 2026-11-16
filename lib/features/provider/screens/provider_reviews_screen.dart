@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/provider/services/provider_profile_repository.dart';
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
-import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 import 'package:my_first_app/features/provider/widgets/provider_sub_scaffold.dart';
 
 class ProviderReviewsScreen extends StatefulWidget {
@@ -16,7 +15,11 @@ class ProviderReviewsScreen extends StatefulWidget {
 class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
   static const List<String> _filters = ['الكل', '5 نجوم', '4 نجوم', '3 فأقل'];
 
+  // عدد التقييمات في كل دفعة
+  static const int _pageSize = 5;
+
   int _filter = 0;
+  int _shown = _pageSize;
 
   List<ProviderReview> get _visible {
     const all = ProviderProfileRepository.reviews;
@@ -153,7 +156,10 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
             ProviderChoiceChip(
               label: _filters[i],
               selected: _filter == i,
-              onTap: () => setState(() => _filter = i),
+              onTap: () => setState(() {
+                _filter = i;
+                _shown = _pageSize; // كل فلتر يبدأ من أول دفعة
+              }),
             ),
           ],
         ],
@@ -286,7 +292,9 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
   // ───────────────────────── البناء ─────────────────────────
   @override
   Widget build(BuildContext context) {
-    final list = _visible;
+    final all = _visible;
+    final list = all.take(_shown).toList();
+    final hasMore = all.length > _shown;
 
     return ProviderSubScaffold(
       title: 'تقييمات المرضى',
@@ -302,22 +310,20 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
             if (i > 0) const SizedBox(height: 8),
             _reviewCard(list[i]),
           ],
-        const SizedBox(height: 16),
-        AppButton(
-          height: 44,
-          fontSize: 13,
-          text: 'عرض المزيد',
-          backgroundColor: AppColors.white,
-          foregroundColor: AppColors.primary700,
-          borderColor: AppColors.border,
-          // 🔥 لاحقاً: تحميل الصفحة التالية من Firebase
-          onPressed: () => showProviderDialog(
-            context,
-            title: 'لا توجد تقييمات أخرى',
-            message: 'عرضنا لك كل التقييمات المتاحة حالياً.',
-            confirmText: 'حسناً',
+        // يظهر فقط إذا في تقييمات لسا ما انعرضت
+        if (hasMore) ...[
+          const SizedBox(height: 16),
+          AppButton(
+            height: 44,
+            fontSize: 13,
+            text: 'عرض المزيد',
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.primary700,
+            borderColor: AppColors.border,
+            // 🔥 لاحقاً: تحميل الصفحة التالية من Firebase
+            onPressed: () => setState(() => _shown += _pageSize),
           ),
-        ),
+        ],
         const SizedBox(height: 16),
         _noteCard(),
       ],

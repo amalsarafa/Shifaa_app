@@ -18,9 +18,9 @@ class AppointmentRepository {
   static List<Appointment> _mockData() {
     const category = 'الرعاية التمريضية';
     const address = Address(
-      title: 'مدينة غزة، حي الرمال',
+      title: 'غزة',
       details: 'الشارع الرئيسي، بناية 12',
-      areaId: 'rimal',
+      areaId: 'gaza',
     );
 
     final injections = nursingServices[0];

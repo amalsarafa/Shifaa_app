@@ -24,7 +24,6 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
   final _reco = TextEditingController();
 
   final Set<String> _procedures = {};
-  bool _followUp = false;
   bool _cash = false;
 
   @override
@@ -65,7 +64,7 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
         temperature: _temp.text.trim(),
         pulse: _pulse.text.trim(),
         recommendations: _reco.text.trim(),
-        followUp: _followUp,
+        followUp: false,
         cashReceived: _cash,
         writtenAt: 'اليوم',
       ),
@@ -252,48 +251,6 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
     );
   }
 
-  Widget _followUpCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'تحديد موعد متابعة',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.neutralDarkActive,
-                  ),
-                ),
-                Text(
-                  'اقتراح موعد زيارة قادمة للمريض',
-                  style: TextStyle(fontSize: 12, color: AppColors.neutralDark),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: _followUp,
-            onChanged: (v) => setState(() => _followUp = v),
-            activeThumbColor: AppColors.white,
-            activeTrackColor: AppColors.primary600,
-            inactiveThumbColor: AppColors.white,
-            inactiveTrackColor: AppColors.border,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _cashCard(int price) {
     return GestureDetector(
       onTap: () => setState(() => _cash = !_cash),
@@ -337,7 +294,7 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary800,
+                      color: AppColors.black,
                     ),
                   ),
                   const Text(
@@ -488,8 +445,6 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
                       lines: 3,
                       hint: 'نصائح أو متابعة مطلوبة',
                     ),
-                    const SizedBox(height: 16),
-                    _followUpCard(),
                     const SizedBox(height: 24),
                     _sectionTitle('استلام المبلغ'),
                     _cashCard(a.price),

@@ -18,7 +18,6 @@ class _ProviderQualificationsScreenState
     extends State<ProviderQualificationsScreen> {
   late final TextEditingController _bio =
       TextEditingController(text: ProviderProfileRepository.bio);
-  late int _years = ProviderProfileRepository.years;
   late final List<String> _allSkills = [...ProviderProfileRepository.allSkills];
   late final Set<String> _skills = {...ProviderProfileRepository.selectedSkills};
   late final List<String> _certs = [...ProviderProfileRepository.certificates];
@@ -46,7 +45,6 @@ class _ProviderQualificationsScreenState
     final r = ProviderProfileRepository.selectedSkills;
     final sameSkills = _skills.length == r.length && _skills.containsAll(r);
     return _bio.text.trim() != ProviderProfileRepository.bio.trim() ||
-        _years != ProviderProfileRepository.years ||
         !sameSkills ||
         !_sameList(_allSkills, ProviderProfileRepository.allSkills) ||
         !_sameList(_certs, ProviderProfileRepository.certificates);
@@ -73,13 +71,147 @@ class _ProviderQualificationsScreenState
   }
 
   Future<void> _addCert() async {
-    final s = await showProviderTextDialog(
-      context,
-      title: 'إضافة شهادة',
-      hint: 'اسم الشهادة',
+    final nameCtrl = TextEditingController();
+    String? file;
+
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: StatefulBuilder(
+          builder: (ctx, setD) {
+            final ready = nameCtrl.text.trim().isNotEmpty && file != null;
+
+            return Dialog(
+              backgroundColor: AppColors.white,
+              insetPadding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'إضافة شهادة',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.neutralDarkActive,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nameCtrl,
+                      onChanged: (_) => setD(() {}),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.neutralDarkActive,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'اسم الشهادة',
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.neutralDark,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide:
+                              const BorderSide(color: AppColors.primary600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      // 🔥 لاحقاً: اختيار ملف حقيقي (file_picker) ورفعه إلى Supabase
+                      onTap: () => setD(() => file = 'شهادة.pdf'),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: file == null
+                              ? AppColors.white
+                              : AppColors.primary50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: file == null
+                                ? AppColors.border
+                                : AppColors.primary600,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              file == null
+                                  ? Icons.attach_file
+                                  : Icons.check_circle_outline,
+                              size: 20,
+                              color: AppColors.primary700,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              file ?? 'إرفاق صورة أو ملف',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            text: 'إضافة',
+                            onPressed: ready
+                                ? () => Navigator.pop(ctx, nameCtrl.text.trim())
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AppButton(
+                            text: 'إلغاء',
+                            backgroundColor: AppColors.white,
+                            foregroundColor: AppColors.neutralDarkActive,
+                            borderColor: AppColors.border,
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
-    if (s == null) return;
-    setState(() => _certs.add(s));
+
+    if (name == null) return;
+    setState(() => _certs.add(name));
   }
 
   Future<void> _save() async {
@@ -103,7 +235,6 @@ class _ProviderQualificationsScreenState
       return;
     }
     ProviderProfileRepository.bio = _bio.text.trim();
-    ProviderProfileRepository.years = _years;
     ProviderProfileRepository.allSkills = [..._allSkills];
     ProviderProfileRepository.selectedSkills = {..._skills};
     ProviderProfileRepository.certificates = [..._certs];
@@ -129,23 +260,6 @@ class _ProviderQualificationsScreenState
           const Spacer(),
           v,
         ],
-      ),
-    );
-  }
-
-  Widget _roundBtn(IconData icon, VoidCallback? onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: AppColors.primary50,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.primary100),
-        ),
-        child: Icon(icon, size: 18, color: AppColors.primary700),
       ),
     );
   }
@@ -257,29 +371,22 @@ class _ProviderQualificationsScreenState
               divider,
               _kv(
                 'سنوات الخبرة',
-                Row(
-                  children: [
-                    _roundBtn(Icons.remove,
-                        _years > 0 ? () => setState(() => _years--) : null),
-                    SizedBox(
-                      width: 72,
-                      child: Text(
-                        _yearsText(_years),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.neutralDarkActive,
-                        ),
-                      ),
-                    ),
-                    _roundBtn(Icons.add,
-                        _years < 50 ? () => setState(() => _years++) : null),
-                  ],
+                Text(
+                  _yearsText(ProviderProfileRepository.years),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.neutralDarkActive,
+                  ),
                 ),
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'التخصص وسنوات الخبرة تُراجَع عند الانضمام، ولتغييرها تواصلي مع الدعم.',
+          style: TextStyle(fontSize: 12, color: AppColors.neutralDark),
         ),
         const SizedBox(height: 16),
         const ProviderSectionHeader('المهارات', hint: 'اختاري ما تتقنينه'),
@@ -311,14 +418,14 @@ class _ProviderQualificationsScreenState
             children: [
               _docRow(
                 title: 'رخصة مزاولة المهنة',
-                subtitle: 'معتمدة · لا تظهر للمرضى',
+                subtitle: 'معتمدة',
                 icon: Icons.badge_outlined,
                 trailing: verified,
               ),
               divider,
               _docRow(
                 title: 'صورة الهوية',
-                subtitle: 'معتمدة · لا تظهر للمرضى',
+                subtitle: 'معتمدة',
                 icon: Icons.credit_card_outlined,
                 trailing: verified,
               ),
@@ -326,7 +433,7 @@ class _ProviderQualificationsScreenState
                 divider,
                 _docRow(
                   title: _certs[i],
-                  subtitle: 'يظهر اسمها للمرضى',
+                  subtitle: 'شهادة مرفقة',
                   icon: Icons.workspace_premium_outlined,
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline,
@@ -337,11 +444,6 @@ class _ProviderQualificationsScreenState
               ],
             ],
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'لتغيير الرخصة أو الهوية تواصلي مع الدعم.',
-          style: TextStyle(fontSize: 12, color: AppColors.neutralDark),
         ),
         const SizedBox(height: 16),
         AppButton(

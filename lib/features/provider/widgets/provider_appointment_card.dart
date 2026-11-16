@@ -5,6 +5,7 @@ import 'package:my_first_app/features/provider/services/provider_appointment_mod
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
 
 /// شارة حالة صغيرة (مؤكد، مكتمل، مرفوض...)
+/// شارة حالة صغيرة (مؤكد، مكتمل، مرفوض...)
 Widget providerChip(String label, Color bg, Color fg, {IconData? icon}) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -21,6 +22,8 @@ Widget providerChip(String label, Color bg, Color fg, {IconData? icon}) {
         ],
         Text(
           label,
+          maxLines: 1,
+          softWrap: false,
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg),
         ),
       ],
@@ -205,7 +208,7 @@ class ProviderAppointmentCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Row(
+                       Row(
               children: [
                 _avatar(a.patientName),
                 const SizedBox(width: 8),
@@ -213,15 +216,25 @@ class ProviderAppointmentCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        a.patientName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.neutralDarkActive,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              a.patientName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.neutralDarkActive,
+                              ),
+                            ),
+                          ),
+                          if (chip != null) ...[
+                            const SizedBox(width: 8),
+                            chip!,
+                          ],
+                        ],
                       ),
                       Text(
                         a.service,
@@ -235,7 +248,6 @@ class ProviderAppointmentCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (chip != null) ...[const SizedBox(width: 8), chip!],
               ],
             ),
             const SizedBox(height: 16),

@@ -319,13 +319,9 @@ class _ProviderAppointmentsScreenState
     return [
       _heading('طلبات بانتظار الرد', sub: 'مرتبة بالأقرب انتهاءً'),
       for (final a in list) ...[
-        // المهلة فوق البطاقة، مثل الرئيسية
-        Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: providerExpiryChip(a.expires),
-        ),
-        const SizedBox(height: 8),
+                 
         ProviderAppointmentCard(
+           chip: providerExpiryChip(a.expires),
           appointment: a,
           onTap: () => _showDetails(a),
           footer: ProviderRequestActions(
@@ -405,7 +401,7 @@ class _ProviderAppointmentsScreenState
       if (awaiting.isNotEmpty) ...[
         _heading('بانتظار تأكيد المريض'),
         for (final a in awaiting) ...[
-          ProviderAppointmentCard(
+                    ProviderAppointmentCard(
             appointment: a,
             chip: providerChip(
               'بانتظار تأكيد المريض',
@@ -413,7 +409,6 @@ class _ProviderAppointmentsScreenState
               AppColors.infoDark,
             ),
             onTap: () => _showDetails(a),
-            footer: _footerNote('بانتظار تأكيد المريض لإتمام الزيارة'),
           ),
           const SizedBox(height: 8),
         ],
@@ -522,11 +517,25 @@ class _ProviderAppointmentsScreenState
       ],
       if (list.isNotEmpty) ...[
         _heading('الملغاة والمرفوضة'),
-        for (final a in list) ...[
+               for (final a in list) ...[
           ProviderAppointmentCard(
             appointment: a,
             chip: _cancelChip(a.status),
-            onTap: () => _showDetails(a),
+            footer: a.status == ProviderApptStatus.declined &&
+                    a.declineReason.isNotEmpty
+                                ? SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      'السبب: ${a.declineReason}',
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: AppColors.neutralDark,
+                      ),
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(height: 8),
         ],
