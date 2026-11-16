@@ -20,7 +20,17 @@ class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
 
   int get _count => _enabled.where((e) => e).length;
 
+  /// هل تغيّر تفعيل أي خدمة عن المحفوظ؟
+  bool get _hasChanges {
+    final services = ProviderProfileRepository.services;
+    for (var i = 0; i < _enabled.length; i++) {
+      if (_enabled[i] != services[i].enabled) return true;
+    }
+    return false;
+  }
+
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     if (_count == 0) {
       await showProviderDialog(
         context,
@@ -47,7 +57,14 @@ class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
     final services = ProviderProfileRepository.services;
     return ProviderSubScaffold(
       title: 'الخدمات التي أقدمها',
-      bottom: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+      // معطّل لحد ما يصير تغيير
+      bottom: IgnorePointer(
+        ignoring: !_hasChanges,
+        child: Opacity(
+          opacity: _hasChanges ? 1 : 0.5,
+          child: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+        ),
+      ),
       children: [
         ProviderSectionHeader(
           'الرعاية التمريضية',

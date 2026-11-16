@@ -5,6 +5,7 @@ import 'package:my_first_app/features/provider/screens/provider_appointment_deta
     show showProviderDeclineSheet;
 import 'package:my_first_app/features/provider/services/provider_appointment_model.dart';
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
+import 'package:my_first_app/features/provider/widgets/provider_appointment_card.dart';
 import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 class ProviderAppointmentsScreen extends StatefulWidget {
@@ -36,8 +37,15 @@ class _ProviderAppointmentsScreenState
   List<ProviderAppointment> get _upcoming =>
       _all.where((a) => a.status == ProviderApptStatus.confirmed).toList();
 
+  List<ProviderAppointment> get _awaiting => _all
+      .where((a) => a.status == ProviderApptStatus.awaitingPatientConfirmation)
+      .toList();
+
   List<ProviderAppointment> get _done =>
       _all.where((a) => a.status == ProviderApptStatus.completed).toList();
+
+  List<ProviderAppointment> get _disputed =>
+      _all.where((a) => a.status == ProviderApptStatus.disputed).toList();
 
   List<ProviderAppointment> get _canceled => _all
       .where(
@@ -66,11 +74,6 @@ class _ProviderAppointmentsScreenState
   }
 
   // ───────────────────────── مساعدات ─────────────────────────
-  String _initial(String name) {
-    final n = name.trim();
-    return n.isEmpty ? '?' : n[0];
-  }
-
   List<ProviderAppointment> _filter(List<ProviderAppointment> list) {
     final q = _searchCtrl.text.trim();
     if (q.isEmpty) return list;
@@ -258,98 +261,6 @@ class _ProviderAppointmentsScreenState
     );
   }
 
-  Widget _avatar(String name) {
-    return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.primary50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _initial(name),
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary800,
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, Color bg, Color fg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg),
-      ),
-    );
-  }
-
-  Widget _metaItem(IconData icon, String text, {bool flexible = false}) {
-    final label = Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: AppColors.primary800,
-      ),
-    );
-
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AppColors.primary600),
-        const SizedBox(width: 4),
-        flexible ? Flexible(child: label) : label,
-      ],
-    );
-
-    return flexible ? Flexible(child: content) : content;
-  }
-
-  Widget _phoneBox(String phone) {
-    return Container(
-      width: double.infinity,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'للتواصل:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary800,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            phone,
-            textDirection: TextDirection.ltr,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _emptyCard(IconData icon, String title, String message) {
     return Container(
       width: double.infinity,
@@ -390,83 +301,6 @@ class _ProviderAppointmentsScreenState
     );
   }
 
-  /// بطاقة موعد واحدة. green = مؤكد، extra = زر أو رقم هاتف أسفلها
-  Widget _card(
-    ProviderAppointment a, {
-    required Widget chip,
-    bool green = false,
-    Widget? extra,
-  }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _showDetails(a),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: green ? AppColors.primary100 : AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: green ? null : Border.all(color: _border),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                _avatar(a.patientName),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        a.patientName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.neutralDarkActive,
-                        ),
-                      ),
-                      Text(
-                        a.service,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.neutralDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                chip,
-              ],
-            ),
-            const SizedBox(height: 16),
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: green ? AppColors.primary200 : _border,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _metaItem(Icons.schedule_rounded, a.time),
-                const SizedBox(width: 8),
-                _metaItem(Icons.calendar_today_outlined, a.date),
-                const SizedBox(width: 8),
-                _metaItem(Icons.location_on_outlined, a.place, flexible: true),
-              ],
-            ),
-            if (extra != null) ...[const SizedBox(height: 16), extra],
-          ],
-        ),
-      ),
-    );
-  }
-
   // ───────────────────────── محتوى التبويبات ─────────────────────────
   List<Widget> _pendingTab() {
     final list = [..._filter(_pending)]
@@ -485,39 +319,22 @@ class _ProviderAppointmentsScreenState
     return [
       _heading('طلبات بانتظار الرد', sub: 'مرتبة بالأقرب انتهاءً'),
       for (final a in list) ...[
-        _card(
-          a,
-          chip: _chip(
-            a.expires,
-            AppColors.warningLight,
-            AppColors.warningDark,
-          ),
-          extra: Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  height: 44,
-                  fontSize: 13,
-                  text: 'رفض',
-                  backgroundColor: AppColors.white,
-                  foregroundColor: AppColors.neutralDarkActive,
-                  borderColor: AppColors.border,
-                  onPressed: () => _decline(a),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AppButton(
-                  height: 44,
-                  fontSize: 13,
-                  text: 'قبول',
-                  onPressed: () => _accept(a),
-                ),
-              ),
-            ],
-          ),
+        // المهلة فوق البطاقة، مثل الرئيسية
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: providerExpiryChip(a.expires),
         ),
         const SizedBox(height: 8),
+        ProviderAppointmentCard(
+          appointment: a,
+          onTap: () => _showDetails(a),
+          footer: ProviderRequestActions(
+            onAccept: () => _accept(a),
+            onDecline: () => _decline(a),
+          ),
+        ),
+        // مسافة أكبر عشان مهلة البطاقة الجاية تبين تابعة إلها
+        const SizedBox(height: 16),
       ],
     ];
   }
@@ -545,11 +362,12 @@ class _ProviderAppointmentsScreenState
       for (final day in days) ...[
         _heading(day),
         for (final a in list.where((x) => x.date == day)) ...[
-          _card(
-            a,
-            green: true,
-            chip: _chip('مؤكد', AppColors.primary800, AppColors.white),
-            extra: a.phone.isEmpty ? null : _phoneBox(a.phone),
+          ProviderAppointmentCard(
+            appointment: a,
+            highlighted: true,
+            chip: providerChip('مؤكد', AppColors.primary800, AppColors.white),
+            onTap: () => _showDetails(a),
+            footer: ProviderPhoneBox(phone: a.phone),
           ),
           const SizedBox(height: 8),
         ],
@@ -558,10 +376,21 @@ class _ProviderAppointmentsScreenState
     ];
   }
 
+  Widget _footerNote(String text) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 12, color: AppColors.neutralDark),
+      ),
+    );
+  }
+
   List<Widget> _doneTab() {
+    final awaiting = _filter(_awaiting);
     final list = _filter(_done);
 
-    if (list.isEmpty) {
+    if (awaiting.isEmpty && list.isEmpty) {
       return [
         _emptyCard(
           Icons.task_alt_outlined,
@@ -572,39 +401,97 @@ class _ProviderAppointmentsScreenState
     }
 
     return [
-      _heading('الزيارات المكتملة'),
-      for (final a in list) ...[
-        _card(a, chip: _chip('مكتمل', AppColors.primary50, AppColors.primary800)),
+      // حُفظ التقرير، والمريض لم يؤكد بعد
+      if (awaiting.isNotEmpty) ...[
+        _heading('بانتظار تأكيد المريض'),
+        for (final a in awaiting) ...[
+          ProviderAppointmentCard(
+            appointment: a,
+            chip: providerChip(
+              'بانتظار تأكيد المريض',
+              AppColors.infoLight,
+              AppColors.infoDark,
+            ),
+            onTap: () => _showDetails(a),
+            footer: _footerNote('بانتظار تأكيد المريض لإتمام الزيارة'),
+          ),
+          const SizedBox(height: 8),
+        ],
         const SizedBox(height: 8),
+      ],
+      if (list.isNotEmpty) ...[
+        _heading('الزيارات المكتملة'),
+        for (final a in list) ...[
+          ProviderAppointmentCard(
+            appointment: a,
+            chip: providerChip(
+              'مكتمل',
+              AppColors.primary50,
+              AppColors.primary800,
+            ),
+            onTap: () => _showDetails(a),
+          ),
+          const SizedBox(height: 8),
+        ],
       ],
     ];
   }
 
   Widget _cancelChip(ProviderApptStatus status) {
     return switch (status) {
-      ProviderApptStatus.declined => _chip(
+      ProviderApptStatus.declined => providerChip(
         'مرفوض',
         AppColors.error50,
         AppColors.error800,
       ),
-      ProviderApptStatus.canceledByPatient => _chip(
+      ProviderApptStatus.canceledByPatient => providerChip(
         'ألغاه المريض',
         AppColors.neutralLight,
         AppColors.neutralDarkActive,
       ),
-      ProviderApptStatus.expired => _chip(
+      ProviderApptStatus.expired => providerChip(
         'انتهت المهلة',
         AppColors.neutralLight,
         AppColors.neutralDarkActive,
       ),
-      _ => _chip('ملغي', AppColors.neutralLight, AppColors.neutralDarkActive),
+      _ => providerChip(
+        'ملغي',
+        AppColors.neutralLight,
+        AppColors.neutralDarkActive,
+      ),
     };
   }
 
+  /// footer البلاغ: السبب + زر الدعم
+  Widget _disputeFooter(ProviderAppointment a) {
+    final reason = a.disputeReason?.trim() ?? '';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _footerNote(
+          reason.isEmpty
+              ? 'أبلغ المريض أن الزيارة لم تتم · قيد مراجعة فريق الدعم'
+              : 'أبلغ المريض: $reason · قيد مراجعة فريق الدعم',
+        ),
+        const SizedBox(height: 8),
+        AppButton(
+          height: 44,
+          fontSize: 13,
+          text: 'تواصل مع الدعم',
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.primary800,
+          borderColor: AppColors.primary200,
+          onPressed: () => Navigator.pushNamed(context, 'ProviderHelp'),
+        ),
+      ],
+    );
+  }
+
   List<Widget> _canceledTab() {
+    final disputed = _filter(_disputed);
     final list = _filter(_canceled);
 
-    if (list.isEmpty) {
+    if (disputed.isEmpty && list.isEmpty) {
       return [
         _emptyCard(
           Icons.event_busy_outlined,
@@ -615,10 +502,34 @@ class _ProviderAppointmentsScreenState
     }
 
     return [
-      _heading('الملغاة والمرفوضة'),
-      for (final a in list) ...[
-        _card(a, chip: _cancelChip(a.status)),
+      // المريض أبلغ أن الزيارة لم تتم
+      if (disputed.isNotEmpty) ...[
+        _heading('بلاغات قيد المراجعة'),
+        for (final a in disputed) ...[
+          ProviderAppointmentCard(
+            appointment: a,
+            chip: providerChip(
+              'بلاغ قيد المراجعة',
+              AppColors.error50,
+              AppColors.error800,
+            ),
+            onTap: () => _showDetails(a),
+            footer: _disputeFooter(a),
+          ),
+          const SizedBox(height: 8),
+        ],
         const SizedBox(height: 8),
+      ],
+      if (list.isNotEmpty) ...[
+        _heading('الملغاة والمرفوضة'),
+        for (final a in list) ...[
+          ProviderAppointmentCard(
+            appointment: a,
+            chip: _cancelChip(a.status),
+            onTap: () => _showDetails(a),
+          ),
+          const SizedBox(height: 8),
+        ],
       ],
     ];
   }

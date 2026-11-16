@@ -1,4 +1,6 @@
 // lib/features/provider/screens/provider_appointment_details_screen.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/provider/services/provider_appointment_model.dart';
@@ -84,8 +86,16 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
         );
       case ProviderApptStatus.confirmed:
         return _chip('مؤكد', AppColors.primary800, AppColors.white);
+      case ProviderApptStatus.awaitingPatientConfirmation:
+        return _chip(
+          'بانتظار تأكيد المريض',
+          AppColors.infoLight,
+          AppColors.infoDark,
+        );
       case ProviderApptStatus.completed:
         return _chip('مكتمل', AppColors.primary50, AppColors.primary800);
+      case ProviderApptStatus.disputed:
+        return _chip('بلاغ قيد المراجعة', AppColors.error50, AppColors.error800);
       case ProviderApptStatus.declined:
         return _chip('مرفوض', AppColors.error50, AppColors.error800);
       case ProviderApptStatus.canceledByPatient:
@@ -422,6 +432,75 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
   }
 
   // ───────────────────────── الشريط السفلي ─────────────────────────
+  Widget _reportButton(BuildContext context, ProviderAppointment a) {
+    return AppButton(
+      text: 'عرض تقرير الزيارة',
+      onPressed: () => Navigator.pushNamed(
+        context,
+        'ProviderReportView',
+        arguments: a.id,
+      ),
+    );
+  }
+
+  Widget _statusLine(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.infoDark,
+      ),
+    );
+  }
+
+  /// صندوق البلاغ: سبب المريض + زر الدعم
+  Widget _disputeBox(BuildContext context, ProviderAppointment a) {
+    final reason = a.disputeReason?.trim() ?? '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.error50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'بلاغ من المريض · قيد مراجعة فريق الدعم',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.error800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            reason.isEmpty ? 'أبلغ المريض أن الزيارة لم تتم.' : reason,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.6,
+              color: AppColors.neutralDarkActive,
+            ),
+          ),
+          const SizedBox(height: 8),
+          AppButton(
+            height: 44,
+            fontSize: 13,
+            text: 'تواصل مع الدعم',
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.primary800,
+            borderColor: AppColors.primary200,
+            onPressed: () => Navigator.pushNamed(context, 'ProviderHelp'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget? _bottomBar(BuildContext context, ProviderAppointment a) {
     Widget? child;
 
@@ -449,23 +528,30 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
         );
         break;
       case ProviderApptStatus.confirmed:
-        child = AppButton(
-          text: 'إنهاء الزيارة وكتابة التقرير',
-          onPressed: () => Navigator.pushNamed(
-            context,
-            'ProviderVisitReport',
-            arguments: a.id,
-          ),
+        // يتفعّل بعد انتهاء وقت الموعد فقط
+        child = _FinishVisitButton(appointment: a);
+        break;
+      case ProviderApptStatus.awaitingPatientConfirmation:
+        child = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _statusLine('بانتظار تأكيد المريض'),
+            const SizedBox(height: 8),
+            _reportButton(context, a),
+          ],
         );
         break;
       case ProviderApptStatus.completed:
-        child = AppButton(
-          text: 'عرض تقرير الزيارة',
-          onPressed: () => Navigator.pushNamed(
-            context,
-            'ProviderReportView',
-            arguments: a.id,
-          ),
+        child = _reportButton(context, a);
+        break;
+      case ProviderApptStatus.disputed:
+        child = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _reportButton(context, a),
+            const SizedBox(height: 8),
+            _disputeBox(context, a),
+          ],
         );
         break;
       default:
@@ -495,8 +581,14 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
             );
           }
 
-          final showPhone = a.status == ProviderApptStatus.confirmed &&
-              a.phone.isNotEmpty;
+          // الرقم يظهر بعد القبول فقط
+          const afterAccept = {
+            ProviderApptStatus.confirmed,
+            ProviderApptStatus.awaitingPatientConfirmation,
+            ProviderApptStatus.completed,
+            ProviderApptStatus.disputed,
+          };
+          final showPhone = afterAccept.contains(a.status);
 
           return Scaffold(
             backgroundColor: AppColors.background,
@@ -536,6 +628,77 @@ class ProviderAppointmentDetailsScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+// ───────────────────────── زر إنهاء الزيارة ─────────────────────────
+/// معطّل حتى ينتهي وقت الموعد، ويتحدّث وحده كل دقيقة
+class _FinishVisitButton extends StatefulWidget {
+  final ProviderAppointment appointment;
+
+  const _FinishVisitButton({required this.appointment});
+
+  @override
+  State<_FinishVisitButton> createState() => _FinishVisitButtonState();
+}
+
+class _FinishVisitButtonState extends State<_FinishVisitButton> {
+  Timer? _timer;
+
+  bool get _ended => !DateTime.now().isBefore(widget.appointment.endsAt);
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_ended) {
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+        if (_ended) _timer?.cancel();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.appointment;
+    final ended = _ended;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // IgnorePointer بدل onPressed: null، عشان يضل اللون تركوازي باهت
+        IgnorePointer(
+          ignoring: !ended,
+          child: Opacity(
+            opacity: ended ? 1 : 0.5,
+            child: AppButton(
+              text: 'إنهاء الزيارة وكتابة التقرير',
+              onPressed: () => Navigator.pushNamed(
+                context,
+                'ProviderVisitReport',
+                arguments: a.id,
+              ),
+            ),
+          ),
+        ),
+        if (!ended) ...[
+          const SizedBox(height: 8),
+          Text(
+            'يتفعّل الزر بعد انتهاء الموعد الساعة '
+            '${ProviderApptFormat.time(a.endsAt)}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: AppColors.neutralDark),
+          ),
+        ],
+      ],
     );
   }
 }

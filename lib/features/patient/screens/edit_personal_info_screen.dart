@@ -40,6 +40,9 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
     _gender = _patient.gender;
     _birthDate = _patient.birthDate;
     _photo = _patient.photo;
+    // نعيد بناء الشاشة مع كل كتابة عشان يتحدّث زر الحفظ
+    _nameCtrl.addListener(_onEdit);
+    _emailCtrl.addListener(_onEdit);
   }
 
   @override
@@ -48,6 +51,16 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
     _emailCtrl.dispose();
     super.dispose();
   }
+
+  void _onEdit() => setState(() {});
+
+  /// هل في تغيير حقيقي عن القيم الأصلية؟
+  bool get _hasChanges =>
+      _nameCtrl.text.trim() != _patient.name.trim() ||
+      _emailCtrl.text.trim() != (_patient.email ?? '').trim() ||
+      _gender != _patient.gender ||
+      _birthDate != _patient.birthDate ||
+      _photo != _patient.photo;
 
   // ───────────────────────── الأفعال ─────────────────────────
   Future<void> _pickPhoto() async {
@@ -88,6 +101,7 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
   }
 
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return; // يوجد خطأ في الحقول
 
@@ -425,10 +439,17 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: AppButton(
-              fontSize: 15,
-              text: _saving ? 'جارٍ الحفظ...' : 'حفظ التغييرات',
-              onPressed: _saving ? null : _save, // يتعطل أثناء الحفظ
+            // معطّل لحد ما يصير تغيير، وأثناء الحفظ
+            child: IgnorePointer(
+              ignoring: !_hasChanges || _saving,
+              child: Opacity(
+                opacity: _hasChanges ? 1 : 0.5,
+                child: AppButton(
+                  fontSize: 15,
+                  text: _saving ? 'جارٍ الحفظ...' : 'حفظ التغييرات',
+                  onPressed: _save,
+                ),
+              ),
             ),
           ),
         ),

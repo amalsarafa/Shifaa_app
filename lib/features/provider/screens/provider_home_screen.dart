@@ -4,7 +4,7 @@ import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/provider/screens/provider_appointment_details_screen.dart'
     show showProviderDeclineSheet;
 import 'package:my_first_app/features/provider/services/provider_appointment_model.dart';
-import 'package:my_first_app/features/provider/widgets/app_button.dart';
+import 'package:my_first_app/features/provider/widgets/provider_appointment_card.dart';
 import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 class ProviderHomeScreen extends StatefulWidget {
@@ -346,103 +346,6 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
     );
   }
 
-  Widget _avatar(String name) {
-    return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.primary50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _initial(name),
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary800,
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, Color bg, Color fg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg),
-      ),
-    );
-  }
-
-  Widget _metaItem(IconData icon, String text, {bool flexible = false}) {
-    final label = Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: AppColors.primary800,
-      ),
-    );
-
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AppColors.primary600),
-        const SizedBox(width: 4),
-        flexible ? Flexible(child: label) : label,
-      ],
-    );
-
-    return flexible ? Flexible(child: content) : content;
-  }
-
-  Widget _metaRow(ProviderAppointment r) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _metaItem(Icons.schedule_rounded, r.time),
-        const SizedBox(width: 8),
-        _metaItem(Icons.calendar_today_outlined, r.date),
-        const SizedBox(width: 8),
-        _metaItem(Icons.location_on_outlined, r.place, flexible: true),
-      ],
-    );
-  }
-
-  Widget _nameAndService(ProviderAppointment r) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            r.patientName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.neutralDarkActive,
-            ),
-          ),
-          Text(
-            r.service,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: AppColors.neutralDark),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _emptyCard(IconData icon, String title, String message) {
     return Container(
       width: double.infinity,
@@ -484,151 +387,14 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
   }
 
   // ───────────────────────── الطلبات المعلقة ─────────────────────────
-  // عنصر معلومات (وقت/تاريخ/مكان) على خلفية غامقة
-  Widget _darkMeta(IconData icon, String text, {bool flexible = false}) {
-    final label = Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: AppColors.white,
-      ),
-    );
-
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AppColors.primary200),
-        const SizedBox(width: 4),
-        flexible ? Flexible(child: label) : label,
-      ],
-    );
-
-    return flexible ? Flexible(child: content) : content;
-  }
-
   Widget _requestCard(ProviderAppointment r) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    // بدون chip: المهلة ظاهرة بجانب عنوان القسم
+    return ProviderAppointmentCard(
+      appointment: r,
       onTap: () => _showDetails(r),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary700,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary600,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _initial(r.patientName),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        r.patientName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
-                      ),
-                      Text(
-                        r.service,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.primary100,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(
-              height: 1,
-              thickness: 1,
-              color: AppColors.primary600,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _darkMeta(Icons.schedule_rounded, r.time),
-                const SizedBox(width: 8),
-                _darkMeta(Icons.calendar_today_outlined, r.date),
-                const SizedBox(width: 8),
-                _darkMeta(Icons.location_on_outlined, r.place, flexible: true),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    height: 44,
-                    fontSize: 13,
-                    text: 'قبول',
-                    backgroundColor: AppColors.white,
-                    foregroundColor: AppColors.primary700,
-                    onPressed: () => _accept(r),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    height: 44,
-                    child: OutlinedButton(
-                      onPressed: () => _decline(r),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.white,
-                        side: const BorderSide(
-                          color: AppColors.primary300,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'رفض',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      footer: ProviderRequestActions(
+        onAccept: () => _accept(r),
+        onDecline: () => _decline(r),
       ),
     );
   }
@@ -643,15 +409,10 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
 
     return Column(
       children: [
+        // مهلة الطلب الأقرب انتهاءً بجانب العنوان
         _sectionHeader(
           'طلب بانتظار الرد',
-          trailing: hasRequests && sorted.first.expires.isNotEmpty
-              ? _chip(
-                  sorted.first.expires,
-                  AppColors.warningLight,
-                  AppColors.warningDark,
-                )
-              : null,
+          trailing: hasRequests ? providerExpiryChip(sorted.first.expires) : null,
         ),
         if (!hasRequests)
           _emptyCard(
@@ -698,73 +459,13 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
   }
 
   // ───────────────────────── الموعد القادم ─────────────────────────
-  Widget _phoneBox(String phone) {
-    return Container(
-      width: double.infinity,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.primary50,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'للتواصل:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary800,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            phone,
-            textDirection: TextDirection.ltr,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _upcomingCard(ProviderAppointment r) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return ProviderAppointmentCard(
+      appointment: r,
+      highlighted: true,
+      chip: providerChip('مؤكد', AppColors.primary800, AppColors.white),
       onTap: () => _showDetails(r),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                _avatar(r.patientName),
-                const SizedBox(width: 8),
-                _nameAndService(r),
-                const SizedBox(width: 8),
-                _chip('مؤكد', AppColors.primary800, AppColors.white),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(height: 1, thickness: 1, color: _border),
-            const SizedBox(height: 16),
-            _metaRow(r),
-            if (r.phone.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _phoneBox(r.phone),
-            ],
-          ],
-        ),
-      ),
+      footer: ProviderPhoneBox(phone: r.phone),
     );
   }
 

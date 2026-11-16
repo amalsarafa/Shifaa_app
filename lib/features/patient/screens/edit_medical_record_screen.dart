@@ -147,7 +147,47 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
       _ecRelationCtrl.text = c.relation;
       _ecPhoneCtrl.text = c.phone;
     }
+
+    // نحفظ صورة القيم الأصلية، ونعيد البناء مع كل كتابة لتحديث زر الحفظ
+    _original = _snapshot();
+    for (final ctrl in [
+      _heightCtrl,
+      _weightCtrl,
+      _otherCtrl,
+      _ecNameCtrl,
+      _ecRelationCtrl,
+      _ecPhoneCtrl,
+    ]) {
+      ctrl.addListener(_onEdit);
+    }
   }
+
+  late final String _original;
+
+  void _onEdit() => setState(() {});
+
+  /// كل قيم النموذج كنص واحد للمقارنة (حقل إضافة الحساسية مش منها)
+  String _snapshot() {
+    final chronic = _chronic.toList()..sort();
+    final meds = _meds
+        .map((m) => '${m.name.trim()}|${m.dose.trim()}|${m.frequency}|${m.timing ?? ''}')
+        .join(';');
+    return [
+      _bloodType ?? '',
+      _heightCtrl.text.trim(),
+      _weightCtrl.text.trim(),
+      chronic.join(','),
+      _otherSelected ? _otherCtrl.text.trim() : '',
+      _allergies.join(','),
+      meds,
+      _ecNameCtrl.text.trim(),
+      _ecRelationCtrl.text.trim(),
+      _ecPhoneCtrl.text.trim(),
+    ].join('\n');
+  }
+
+  /// هل في تغيير حقيقي عن السجل الأصلي؟
+  bool get _hasChanges => _snapshot() != _original;
 
   @override
   void dispose() {
@@ -184,6 +224,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
   }
 
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
@@ -671,10 +712,17 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: AppButton(
-              fontSize: 15,
-              text: _saving ? 'جارٍ الحفظ...' : 'حفظ السجل الطبي',
-              onPressed: _saving ? null : _save,
+            // معطّل لحد ما يصير تغيير، وأثناء الحفظ
+            child: IgnorePointer(
+              ignoring: !_hasChanges || _saving,
+              child: Opacity(
+                opacity: _hasChanges ? 1 : 0.5,
+                child: AppButton(
+                  fontSize: 15,
+                  text: _saving ? 'جارٍ الحفظ...' : 'حفظ السجل الطبي',
+                  onPressed: _save,
+                ),
+              ),
             ),
           ),
         ),

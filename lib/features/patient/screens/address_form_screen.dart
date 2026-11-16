@@ -27,6 +27,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   int? _index; // null = عنوان جديد
   Address? _original;
   bool _makeDefault = false;
+  bool _originalDefault = false;
   bool _defaultLocked = false;
   bool _ready = false;
   bool _saving = false;
@@ -51,7 +52,12 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       _landmarkCtrl.text = _original!.landmark ?? '';
       _notesCtrl.text = _original!.notes ?? '';
       _makeDefault = arg == patient.defaultAddressIndex;
+      _originalDefault = _makeDefault;
       _defaultLocked = _makeDefault; // الافتراضي يتغير من صفحة العناوين
+      // نعيد البناء مع كل كتابة لتحديث زر الحفظ
+      for (final c in [_areaCtrl, _detailsCtrl, _landmarkCtrl, _notesCtrl]) {
+        c.addListener(_onEdit);
+      }
     } else {
       // أول عنوان يكون افتراضياً دائماً
       _makeDefault = patient.addresses.isEmpty;
@@ -68,8 +74,22 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     super.dispose();
   }
 
+  void _onEdit() => setState(() {});
+
+  /// عند التعديل: هل في تغيير حقيقي؟ (الإضافة دايماً مسموحة)
+  bool get _hasChanges {
+    final o = _original;
+    if (!_isEdit || o == null) return true;
+    return _areaCtrl.text.trim() != o.title.trim() ||
+        _detailsCtrl.text.trim() != o.details.trim() ||
+        _landmarkCtrl.text.trim() != (o.landmark ?? '').trim() ||
+        _notesCtrl.text.trim() != (o.notes ?? '').trim() ||
+        _makeDefault != _originalDefault;
+  }
+
   // ───────────────────────── الحفظ ─────────────────────────
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
@@ -368,10 +388,17 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: AppButton(
-              fontSize: 15,
-              text: _saving ? 'جارٍ الحفظ...' : 'حفظ العنوان',
-              onPressed: _saving ? null : _save,
+            // عند التعديل: معطّل لحد ما يصير تغيير، وأثناء الحفظ
+            child: IgnorePointer(
+              ignoring: !_hasChanges || _saving,
+              child: Opacity(
+                opacity: _hasChanges ? 1 : 0.5,
+                child: AppButton(
+                  fontSize: 15,
+                  text: _saving ? 'جارٍ الحفظ...' : 'حفظ العنوان',
+                  onPressed: _save,
+                ),
+              ),
             ),
           ),
         ),

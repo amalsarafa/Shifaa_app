@@ -47,6 +47,47 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         fontFamily: GoogleFonts.cairo().fontFamily,
         scaffoldBackgroundColor: AppColors.background,
+        // بدونها Flutter بيستعمل البنفسجي الافتراضي بالساعة والمفاتيح...
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary600,
+          primary: AppColors.primary600,
+          onPrimary: AppColors.white,
+          surface: AppColors.white,
+          onSurface: AppColors.neutralDarkActive,
+        ),
+        // نافذة اختيار الوقت
+        timePickerTheme: TimePickerThemeData(
+          backgroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          dialHandColor: AppColors.primary600,
+          dialBackgroundColor: AppColors.primary50,
+          dialTextColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.white
+                : AppColors.neutralDarkActive,
+          ),
+          hourMinuteColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.primary100
+                : AppColors.primary50,
+          ),
+          hourMinuteTextColor: AppColors.primary800,
+          dayPeriodColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.primary100
+                : AppColors.white,
+          ),
+          dayPeriodTextColor: AppColors.primary800,
+          dayPeriodBorderSide: const BorderSide(color: AppColors.primary100),
+          entryModeIconColor: AppColors.primary600,
+        ),
+        // نافذة اختيار التاريخ
+        datePickerTheme: const DatePickerThemeData(
+          backgroundColor: AppColors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       home:const RoleSwitchScreen(),
       //const ProviderShell(),

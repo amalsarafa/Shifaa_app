@@ -24,10 +24,25 @@ class _ProviderPersonalInfoScreenState
   late DateTime _birth = ProviderProfileRepository.birth;
 
   @override
+  void initState() {
+    super.initState();
+    // نعيد البناء مع كل كتابة لتحديث زر الحفظ
+    _email.addListener(_onEdit);
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     super.dispose();
   }
+
+  void _onEdit() => setState(() {});
+
+  /// هل في تغيير حقيقي عن القيم المحفوظة؟
+  bool get _hasChanges =>
+      _email.text.trim() != ProviderProfileRepository.email.trim() ||
+      _gender != ProviderProfileRepository.gender ||
+      _birth != ProviderProfileRepository.birth;
 
   String _fmtDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')} / ${d.month.toString().padLeft(2, '0')} / ${d.year}';
@@ -52,7 +67,8 @@ class _ProviderPersonalInfoScreenState
   }
 
   Future<void> _save() async {
-    final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
+    if (!_hasChanges) return; // ما في شي يتحفظ
+    final ok =RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
     if (!ok) {
       await showProviderDialog(
         context,
@@ -144,7 +160,14 @@ class _ProviderPersonalInfoScreenState
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppButton(text: 'حفظ التعديلات', onPressed: _save),
+                // معطّل لحد ما يصير تغيير
+                IgnorePointer(
+                  ignoring: !_hasChanges,
+                  child: Opacity(
+                    opacity: _hasChanges ? 1 : 0.5,
+                    child: AppButton(text: 'حفظ التعديلات', onPressed: _save),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 AppButton(
                   text: 'إلغاء',

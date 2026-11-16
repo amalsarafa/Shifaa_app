@@ -20,6 +20,20 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
 
   double _minutes(TimeOfDay t) => t.hour * 60.0 + t.minute;
 
+  /// هل تغيّر يوم أو ساعة أو منطقة عن المحفوظ؟
+  bool get _hasChanges {
+    final saved = ProviderProfileRepository.workDays;
+    for (var i = 0; i < _days.length; i++) {
+      final d = _days[i];
+      final s = saved[i];
+      if (d.enabled != s.enabled || d.from != s.from || d.to != s.to) {
+        return true;
+      }
+    }
+    final areas = ProviderProfileRepository.areas;
+    return _areas.length != areas.length || !_areas.containsAll(areas);
+  }
+
   Future<void> _pickTime(ProviderWorkDay d, {required bool isFrom}) async {
     final picked = await showTimePicker(
       context: context,
@@ -45,6 +59,7 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
   }
 
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     final active = _days.where((d) => d.enabled).toList();
     if (active.isEmpty) {
       await _warn('اختاري يومًا واحدًا', 'فعّلي يوم عمل واحد على الأقل.');
@@ -163,7 +178,14 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
   Widget build(BuildContext context) {
     return ProviderSubScaffold(
       title: 'أوقات العمل ومناطق الخدمة',
-      bottom: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+      // معطّل لحد ما يصير تغيير
+      bottom: IgnorePointer(
+        ignoring: !_hasChanges,
+        child: Opacity(
+          opacity: _hasChanges ? 1 : 0.5,
+          child: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+        ),
+      ),
       children: [
         const ProviderSectionHeader(
           'أيام وساعات العمل',

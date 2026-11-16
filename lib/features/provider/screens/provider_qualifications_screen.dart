@@ -24,9 +24,32 @@ class _ProviderQualificationsScreenState
   late final List<String> _certs = [...ProviderProfileRepository.certificates];
 
   @override
+  void initState() {
+    super.initState();
+    // نعيد البناء مع كل كتابة لتحديث زر الحفظ
+    _bio.addListener(_onEdit);
+  }
+
+  @override
   void dispose() {
     _bio.dispose();
     super.dispose();
+  }
+
+  void _onEdit() => setState(() {});
+
+  static bool _sameList(List<String> a, List<String> b) =>
+      a.length == b.length && a.join('\u0001') == b.join('\u0001');
+
+  /// هل في تغيير حقيقي عن القيم المحفوظة؟
+  bool get _hasChanges {
+    final r = ProviderProfileRepository.selectedSkills;
+    final sameSkills = _skills.length == r.length && _skills.containsAll(r);
+    return _bio.text.trim() != ProviderProfileRepository.bio.trim() ||
+        _years != ProviderProfileRepository.years ||
+        !sameSkills ||
+        !_sameList(_allSkills, ProviderProfileRepository.allSkills) ||
+        !_sameList(_certs, ProviderProfileRepository.certificates);
   }
 
   String _yearsText(int n) {
@@ -60,6 +83,7 @@ class _ProviderQualificationsScreenState
   }
 
   Future<void> _save() async {
+    if (!_hasChanges) return; // ما في شي يتحفظ
     if (_bio.text.trim().isEmpty) {
       await showProviderDialog(
         context,
@@ -183,7 +207,14 @@ class _ProviderQualificationsScreenState
 
     return ProviderSubScaffold(
       title: 'المؤهلات والخبرة',
-      bottom: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+      // معطّل لحد ما يصير تغيير
+      bottom: IgnorePointer(
+        ignoring: !_hasChanges,
+        child: Opacity(
+          opacity: _hasChanges ? 1 : 0.5,
+          child: AppButton(text: 'حفظ التغييرات', onPressed: _save),
+        ),
+      ),
       children: [
         const ProviderSectionHeader('نبذة عني', hint: 'تظهر للمرضى'),
         Container(

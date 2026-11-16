@@ -74,7 +74,7 @@ class _ProviderVisitReportScreenState extends State<ProviderVisitReportScreen> {
     await showProviderDialog(
       context,
       title: 'تم حفظ التقرير',
-      message: 'انتهت الزيارة وأصبحت ضمن المواعيد المكتملة.',
+      message: 'أرسلنا للمريض طلب تأكيد الزيارة.',
       confirmText: 'حسناً',
     );
 

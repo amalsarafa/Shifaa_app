@@ -23,8 +23,7 @@ class AvailabilityRepository {
 
   /// أوقات عمل تجريبية لكل أيام الأسبوع (بما فيها الجمعة)
   static const List<WorkPeriod> _periods = [
-    WorkPeriod(9 * 60, 11 * 60), // 9:00 → 11:00
-    WorkPeriod(16 * 60, 18 * 60), // 4:00 → 6:00
+    WorkPeriod(9 * 60, 14 * 60), // 9:00 → 2:00 م
   ];
 
   /// وقت التنقل بين الزيارات. يُحجز مع كل فترة ولا يظهر للمريض
