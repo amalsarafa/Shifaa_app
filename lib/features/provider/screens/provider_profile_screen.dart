@@ -66,30 +66,7 @@ class ProviderMyProfileScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const PatientAvatar(name: _name, photo: _photo, size: 64),
-                  Positioned(
-                    bottom: -2,
-                    left: -2,
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: AppColors.successNormal,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        size: 12,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const PatientAvatar(name: _name, photo: _photo, size: 64),
               const SizedBox(width: 16),
               const Expanded(
                 child: Column(

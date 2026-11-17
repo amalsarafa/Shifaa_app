@@ -1,5 +1,6 @@
 // lib/features/provider/screens/provider_personal_info_screen.dart
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/widgets/patient_avatar.dart';
 import 'package:my_first_app/features/provider/services/provider_profile_repository.dart';
@@ -22,6 +23,7 @@ class _ProviderPersonalInfoScreenState
       TextEditingController(text: ProviderProfileRepository.email);
   late String _gender = ProviderProfileRepository.gender;
   late DateTime _birth = ProviderProfileRepository.birth;
+  late String? _photo = ProviderProfileRepository.photo;
 
   @override
   void initState() {
@@ -42,7 +44,18 @@ class _ProviderPersonalInfoScreenState
   bool get _hasChanges =>
       _email.text.trim() != ProviderProfileRepository.email.trim() ||
       _gender != ProviderProfileRepository.gender ||
-      _birth != ProviderProfileRepository.birth;
+      _birth != ProviderProfileRepository.birth ||
+      _photo != ProviderProfileRepository.photo;
+
+  Future<void> _pickPhoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      imageQuality: 80,
+    );
+    if (picked == null) return; // أغلق المعرض بدون اختيار
+    setState(() => _photo = picked.path);
+  }
 
   String _fmtDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')} / ${d.month.toString().padLeft(2, '0')} / ${d.year}';
@@ -62,6 +75,7 @@ class _ProviderPersonalInfoScreenState
       _email.text = ProviderProfileRepository.email;
       _gender = ProviderProfileRepository.gender;
       _birth = ProviderProfileRepository.birth;
+      _photo = ProviderProfileRepository.photo;
       _editing = false;
     });
   }
@@ -81,6 +95,7 @@ class _ProviderPersonalInfoScreenState
     ProviderProfileRepository.email = _email.text.trim();
     ProviderProfileRepository.gender = _gender;
     ProviderProfileRepository.birth = _birth;
+    ProviderProfileRepository.photo = _photo;
     setState(() => _editing = false);
     if (!mounted) return;
     await showProviderDialog(
@@ -141,9 +156,13 @@ class _ProviderPersonalInfoScreenState
                 ],
               ),
             ),
+            // نفس القفل لكل الحقول المرتبطة بالتوثيق
             if (locked)
-              const Icon(Icons.lock_outline,
-                  size: 18, color: AppColors.neutralNormal),
+              const Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: AppColors.neutralNormal,
+              ),
           ],
         ),
       ),
@@ -184,9 +203,12 @@ class _ProviderPersonalInfoScreenState
             ),
       children: [
         Center(
+          // في التعديل فقط: الضغط يغيّر الصورة وتظهر شارة الكاميرا
           child: PatientAvatar(
             name: ProviderProfileRepository.name,
+            photo: _editing ? _photo : ProviderProfileRepository.photo,
             size: 88,
+            onTap: _editing ? _pickPhoto : null,
           ),
         ),
         const SizedBox(height: 16),
@@ -205,6 +227,15 @@ class _ProviderPersonalInfoScreenState
                 icon: Icons.phone_outlined,
                 label: 'رقم الهاتف',
                 value: ProviderProfileRepository.phone,
+                ltr: true,
+                locked: true,
+              ),
+              _divider,
+              // للقراءة فقط في الوضعين، ولا يدخل في الحفظ
+              _row(
+                icon: Icons.badge_outlined,
+                label: 'رقم الهوية',
+                value: maskNationalId(ProviderProfileRepository.nationalId),
                 ltr: true,
                 locked: true,
               ),
@@ -280,7 +311,7 @@ class _ProviderPersonalInfoScreenState
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'الاسم ورقم الهاتف مرتبطان بتوثيق حسابك، ولتغييرهما تواصلي مع الدعم.',
+                  'الاسم ورقم الهاتف ورقم الهوية مرتبطة بتوثيق حسابك، ولتغييرها تواصلي مع الدعم.',
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.5,

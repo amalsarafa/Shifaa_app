@@ -42,12 +42,16 @@ import 'package:my_first_app/features/provider/screens/provider_schedule_screen.
 import 'package:my_first_app/features/provider/screens/provider_reviews_screen.dart';
 import 'package:my_first_app/features/provider/screens/provider_settings_screen.dart';
 import 'package:my_first_app/features/provider/screens/provider_help_screen.dart';
+import 'package:my_first_app/features/auth/screens/provider_signup_screen.dart';
+import 'package:my_first_app/features/auth/screens/provider_pending_screen.dart';
+import 'package:my_first_app/features/auth/screens/provider_approved_screen.dart';
+import 'package:my_first_app/features/dev.dart/role_switch_screen.dart';
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     // general
 
     // patient
-    //"Main": (context) =>MainShell(),
+    "Main": (context) =>MainShell(),
     "Onboarding": (context) => OnboardingScreen(),
     "Login": (context) => LoginScreen(),
     "Verification": (context) => VerificationScreen(),
@@ -97,6 +101,14 @@ class AppRoutes {
     "ProviderSettings": (context) => const ProviderSettingsScreen(),
     "ProviderHelp": (context) => const ProviderHelpScreen(),
     "ProviderSchedule": (context) => const ProviderScheduleScreen(),
+
+    // انضمام مقدم الرعاية
+    "ProviderSignup": (context) => const ProviderSignupScreen(),
+    "ProviderPending": (context) => const ProviderPendingScreen(),
+    "ProviderApproved": (context) => const ProviderApprovedScreen(),
+
+    // مؤقت للتجربة
+    "DevRoleSwitch": (context) => const RoleSwitchScreen(),
 };
 }
 

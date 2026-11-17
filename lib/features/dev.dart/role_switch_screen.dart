@@ -97,6 +97,18 @@ class RoleSwitchScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => ProviderShell()),
                 ),
               ),
+              const SizedBox(height: 16),
+              _option(
+                icon: Icons.hourglass_top_rounded,
+                title: 'معاينة: قيد المراجعة',
+                onTap: () => Navigator.pushNamed(context, 'ProviderPending'),
+              ),
+              const SizedBox(height: 16),
+              _option(
+                icon: Icons.verified_outlined,
+                title: 'معاينة: تم القبول',
+                onTap: () => Navigator.pushNamed(context, 'ProviderApproved'),
+              ),
             ],
           ),
         ),

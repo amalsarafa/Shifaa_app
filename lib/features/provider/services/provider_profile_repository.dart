@@ -55,6 +55,12 @@ class ProviderReview {
   String get initial => name.trim().isEmpty ? '?' : name.trim()[0];
 }
 
+/// رقم الهوية مخفي جزئيًا: "•••••6789"
+String maskNationalId(String id) {
+  final last = id.length <= 4 ? id : id.substring(id.length - 4);
+  return '•••••$last';
+}
+
 /// بيانات وهمية حاليًا — تُستبدل ببيانات Firebase لاحقًا
 class ProviderProfileRepository {
   ProviderProfileRepository._();
@@ -65,6 +71,12 @@ class ProviderProfileRepository {
   static String email = 'sara@email.com';
   static String gender = 'أنثى';
   static DateTime birth = DateTime(1992, 6, 15);
+
+  // 🔥 لاحقاً: يأتي من Firebase، ويقرأه المقدم نفسه والأدمن فقط ولا يظهر للمرضى
+  static const String nationalId = '123456789';
+
+  // مسار صورة من الجهاز حاليًا 🔥 لاحقاً: رابط الصورة من Supabase Storage
+  static String? photo;
 
   // المؤهلات والخبرة
   static String bio =

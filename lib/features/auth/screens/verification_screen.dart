@@ -113,9 +113,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
 
     // حالة تسجيل الدخول
+    // مؤقت: يفتح شاشة اختيار التطبيق للتجربة. لاحقًا يُحدَّد الدور من Firestore.
     Navigator.pushNamedAndRemoveUntil(
       context,
-      'Home',
+      'DevRoleSwitch',
       (route) => false,
     );
   }

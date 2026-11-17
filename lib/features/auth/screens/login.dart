@@ -266,6 +266,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // رابط انضمام مقدم الرعاية
+                InkWell(
+                  onTap: () => Navigator.pushNamed(context, 'ProviderSignup'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'هل أنت مقدم رعاية؟',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.neutralDark,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'انضم إلينا',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary500,
+                          ),
+                        ),
+                       
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
               ],
             ),
