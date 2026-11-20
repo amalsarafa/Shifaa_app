@@ -1,18 +1,75 @@
 // lib/features/auth/screens/provider_pending_screen.dart
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 import 'package:my_first_app/features/auth/widgets/join_stepper.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
+/// عنوان الشاشة في الوسط بدون سهم رجوع (مشترك مع شاشة القبول)
+class ProviderStatusHeader extends StatelessWidget {
+  const ProviderStatusHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 56,
+      child: Center(
+        child: Text(
+          'حالة الطلب',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutralDarkActive,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// بعد إرسال طلب الانضمام: بانتظار مراجعة الإدارة
-class ProviderPendingScreen extends StatelessWidget {
+class ProviderPendingScreen extends StatefulWidget {
   const ProviderPendingScreen({super.key});
+
+  @override
+  State<ProviderPendingScreen> createState() => _ProviderPendingScreenState();
+}
+
+class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
+  bool _handled = false; // حتى لا ننتقل مرتين
+
+  @override
+  void initState() {
+    super.initState();
+    // 🔥 Firebase: الاستماع لتغيّر حالة الطلب في Firestore
+    AuthRoleRepository.application.addListener(_onStatusChanged);
+  }
+
+  @override
+  void dispose() {
+    AuthRoleRepository.application.removeListener(_onStatusChanged);
+    super.dispose();
+  }
+
+  Future<void> _onStatusChanged() async {
+    if (_handled || !mounted) return;
+    final status = AuthRoleRepository.application.value?.status;
+    if (status == ApplicationStatus.approved) {
+      _handled = true;
+      Navigator.pushReplacementNamed(context, 'ProviderApproved');
+    } else if (status == ApplicationStatus.rejected) {
+      _handled = true;
+      await showRejectionDialog(context);
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, 'Home', (r) => false);
+    }
+  }
 
   Future<void> _logout(BuildContext context) async {
     final ok = await showProviderDialog(
       context,
-      title: 'هل تريدين تسجيل الخروج؟',
+      title: 'هل تريد تسجيل الخروج؟',
       message: 'يمكنك تسجيل الدخول مرة أخرى لمتابعة حالة طلبك.',
       confirmText: 'تسجيل الخروج',
       cancelText: 'إلغاء',
@@ -37,7 +94,8 @@ class ProviderPendingScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const ProviderStatusHeader(),
+                  const SizedBox(height: 8),
                   const JoinStepper(
                     labels: ['إرسال الطلب', 'مراجعة الإدارة', 'تفعيل الحساب'],
                     current: 2,
@@ -51,7 +109,7 @@ class ProviderPendingScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   AppButton(
-                    text: 'تواصلي مع الدعم',
+                    text: 'تواصل مع الدعم',
                     fontSize: 15,
                     backgroundColor: AppColors.white,
                     foregroundColor: AppColors.primary700,

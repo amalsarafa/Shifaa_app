@@ -20,7 +20,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    _timer = Timer(const Duration(seconds: 4), () {
+    // 🔥 لاحقًا: إن كان المستخدم مسجلًا (FirebaseAuth.currentUser != null) نتخطى Onboarding/Login ونستدعي AuthRoleRepository.routeFor مباشرة
+    _timer = Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, 'Onboarding');
     });

@@ -4,10 +4,11 @@ import 'package:my_first_app/core/routes/app_routes.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:my_first_app/features/splash/splash_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await Firebase.initializeApp();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   SystemChrome.setSystemUIOverlayStyle(

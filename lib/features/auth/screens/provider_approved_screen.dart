@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/auth/screens/provider_pending_screen.dart';
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 import 'package:my_first_app/features/auth/widgets/join_stepper.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
@@ -22,7 +23,8 @@ class ProviderApprovedScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const ProviderStatusHeader(),
+                  const SizedBox(height: 8),
                   const JoinStepper(
                     labels: ['إرسال الطلب', 'مراجعة الإدارة', 'تفعيل الحساب'],
                     current: 4, // كل الخطوات منتهية
@@ -36,13 +38,17 @@ class ProviderApprovedScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   AppButton(
-                    text: 'ابدئي الآن',
+                    text: 'ابدأ الآن',
                     fontSize: 15,
-                    onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      'ProviderHome',
-                      (r) => false,
-                    ),
+                    onPressed: () {
+                      // 🔥 Firebase: حفظ welcomeSeen في Firestore
+                      AuthRoleRepository.markWelcomeSeen();
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        'ProviderHome',
+                        (r) => false,
+                      );
+                    },
                   ),
                 ],
               ),

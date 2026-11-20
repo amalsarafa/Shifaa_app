@@ -1,19 +1,31 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/core/widgets/success_check.dart';
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
+import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 enum _VerifyState { idle, error, success }
 
-/// شو بنبعت لشاشة التحقق: الرقم + هل هو تغيير رقم ولا تسجيل دخول
+/// شو بنبعت لشاشة التحقق: الرقم + نوع العملية
 class VerificationArgs {
   final String phone;
   final bool isChangePhone;
-  const VerificationArgs(this.phone, {this.isChangePhone = false});
+  final bool isProviderJoin; // طلب انضمام مقدم رعاية: يرجع true للمعالج
+  final String? verificationId; // من Firebase بعد إرسال الرمز
+  final int? resendToken; // لإعادة إرسال الرمز
+  const VerificationArgs(
+    this.phone, {
+    this.isChangePhone = false,
+    this.isProviderJoin = false,
+    this.verificationId,
+    this.resendToken,
+  });
 }
 
 class VerificationScreen extends StatefulWidget {
@@ -24,9 +36,10 @@ class VerificationScreen extends StatefulWidget {
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  static const int _length = 4;
+  static const int _length = 6;
   static const int _resendSeconds = 45;
-  static const String _testCode = '1234'; // الكود الثابت للتجربة
+  // الكود الثابت للتجربة: فقط لما ما في verificationId (مثل تغيير الرقم)
+  static const String _testCode = '123456';
 
   static const String _shieldIcon = 'assets/icons/shield_check.svg';
 
@@ -36,10 +49,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
   int _secondsLeft = _resendSeconds;
   _VerifyState _state = _VerifyState.idle;
 
+  static const int _maxAttempts = 3;
+  int _failedAttempts = 0; // عدد المحاولات الخاطئة
+
+  bool _loading = false;
+  String? _verificationId; // الجديد بعد إعادة الإرسال
+  int? _resendToken;
+
   @override
   void initState() {
     super.initState();
     _startTimer();
+    // نفتح الكيبورد بعد ما تخلص حركة فتح الشاشة
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), _showKeyboard);
+    });
   }
 
   @override
@@ -48,6 +72,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
     _codeController.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  // يجبر الكيبورد على الظهور حتى لو كان الحقل مركّزًا أصلًا
+  void _showKeyboard() {
+    if (!mounted || _state == _VerifyState.success) return;
+    _focus.requestFocus();
+    SystemChannels.textInput.invokeMethod('TextInput.show');
   }
 
   // تسجيل الدخول بيبعت String، وتغيير الرقم بيبعت VerificationArgs
@@ -76,29 +107,118 @@ class _VerificationScreenState extends State<VerificationScreen> {
   bool get _isComplete => _codeController.text.length == _length;
 
   // الزر بيشتغل بس لما يكتمل الكود وما يكون في خطأ
-  bool get _canConfirm => _isComplete && _state == _VerifyState.idle;
+  bool get _canConfirm =>
+      _isComplete && _state == _VerifyState.idle && !_loading;
 
-  void _resend() {
-    // TODO: هون استدعي Firebase لإعادة إرسال الرمز
+  /// الـ verificationId الحالي (الجديد بعد إعادة الإرسال أو اللي جاي من الدخول)
+  String? get _currentVerificationId =>
+      _verificationId ?? _args.verificationId;
+
+  Future<void> _resend() async {
     _codeController.clear();
-    setState(() => _state = _VerifyState.idle);
+    setState(() {
+      _failedAttempts = 0;
+      _state = _VerifyState.idle;
+    });
     _startTimer();
+    _showKeyboard();
+
+    // بدون verificationId (تغيير الرقم) ما في إرسال فعلي
+    if (_currentVerificationId == null) return;
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: _args.phone,
+      timeout: const Duration(seconds: 60),
+      forceResendingToken: _resendToken ?? _args.resendToken,
+      verificationCompleted: (_) {},
+      verificationFailed: (_) {
+        if (!mounted) return;
+        setState(() => _state = _VerifyState.error);
+      },
+      codeSent: (verificationId, resendToken) {
+        _verificationId = verificationId;
+        _resendToken = resendToken;
+      },
+      codeAutoRetrievalTimeout: (_) {},
+    );
   }
 
-  void _verify() {
+  Future<void> _verify() async {
     if (!_isComplete) return;
 
-    // TODO: هون تحققي من الكود عبر Firebase بدل الكود الثابت
-    if (_codeController.text == _testCode) {
+    final verificationId = _currentVerificationId;
+    if (verificationId == null) {
+      // الكود الثابت (تغيير الرقم وطلب الانضمام)
+      if (_codeController.text == _testCode) {
+        _timer?.cancel();
+        _focus.unfocus();
+        setState(() => _state = _VerifyState.success);
+        return;
+      }
+    } else {
+      // التحقق عبر Firebase
+      setState(() => _loading = true);
+      try {
+        final credential = PhoneAuthProvider.credential(
+          verificationId: verificationId,
+          smsCode: _codeController.text,
+        );
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        if (!mounted) return;
+        _timer?.cancel();
+        _focus.unfocus();
+        setState(() {
+          _state = _VerifyState.success;
+          _loading = false;
+        });
+        return;
+      } on FirebaseAuthException {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        // يكمل تحت كرمز خاطئ (خانات حمراء + عدّاد المحاولات)
+      }
+    }
+
+    // رمز خاطئ: العدّاد يبقى شغال
+    setState(() {
+      _failedAttempts++;
+      _state = _VerifyState.error;
+    });
+
+    if (_failedAttempts >= _maxAttempts) {
       _timer?.cancel();
       _focus.unfocus();
-      setState(() => _state = _VerifyState.success);
-    } else {
-      setState(() => _state = _VerifyState.error);
+      await showProviderDialog(
+        context,
+        title: 'تجاوزت عدد المحاولات',
+        message: 'أعد إرسال الرمز وحاول مجددًا.',
+        confirmText: 'حسنًا',
+      );
+      if (!mounted) return;
+      Navigator.pop(context); // يرجع لشاشة الدخول
     }
   }
 
+  /// زر "إعادة المحاولة": يمسح الخانات ويرجع للحالة الطبيعية
+  void _retry() {
+    _codeController.clear();
+    setState(() => _state = _VerifyState.idle);
+    _showKeyboard();
+  }
+
+  String get _remainingText {
+    final left = _maxAttempts - _failedAttempts;
+    if (left == 1) return 'تبقى لك محاولة واحدة';
+    if (left == 2) return 'تبقى لك محاولتان';
+    return 'تبقى لك $left محاولات';
+  }
+
   Future<void> _continue() async {
+    // حالة طلب الانضمام: نرجع للمعالج بنجاح التحقق
+    if (_args.isProviderJoin) {
+      Navigator.pop(context, true);
+      return;
+    }
+
     // حالة تغيير رقم الهاتف
     if (_args.isChangePhone) {
       await PatientRepository.updatePhone(_args.phone);
@@ -113,12 +233,27 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
 
     // حالة تسجيل الدخول
-    // مؤقت: يفتح شاشة اختيار التطبيق للتجربة. لاحقًا يُحدَّد الدور من Firestore.
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      'DevRoleSwitch',
-      (route) => false,
-    );
+    final phone = _args.phone;
+    AuthRoleRepository.lastPhone = phone;
+
+    // مؤقت: يفتح شاشة اختيار التطبيق للتجربة
+    if (kDevMode) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'DevRoleSwitch',
+        (route) => false,
+      );
+      return;
+    }
+
+    // 🔥 Firebase: الدور يُقرأ من Firestore بعد نجاح الرمز
+    final route = await AuthRoleRepository.routeFor(phone);
+    if (!mounted) return;
+    if (AuthRoleRepository.hasUnseenRejection) {
+      await showRejectionDialog(context);
+      if (!mounted) return;
+    }
+    Navigator.pushNamedAndRemoveUntil(context, route, (r) => false);
   }
 
   Color get _mainColor =>
@@ -181,36 +316,36 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   Widget _phoneChip(String phone) {
     final bool success = _state == _VerifyState.success;
-    return GestureDetector(
-      onTap: success ? null : () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.primary50,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Directionality(
-              textDirection: TextDirection.ltr,
-              child: Text(
-                phone,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.neutralDarkActive,
-                ),
+    // عرض فقط، وعلامة الصح بالنجاح
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary50,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              phone,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.neutralDarkActive,
               ),
             ),
+          ),
+          if (success) ...[
             const SizedBox(width: 6),
-            Icon(
-              success ? Icons.check_circle : Icons.edit_outlined,
+            const Icon(
+              Icons.check_circle,
               size: 14,
               color: AppColors.primary500,
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -240,8 +375,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     }
 
     return Container(
-      width: 56,
-      height: 56,
+      width: 44,
+      height: 52,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: fill,
@@ -251,7 +386,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       child: Text(
         filled ? text[index] : '',
         style: TextStyle(
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: textColor,
         ),
@@ -264,7 +399,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       alignment: Alignment.center,
       children: [
         GestureDetector(
-          onTap: () => _focus.requestFocus(),
+          onTap: _showKeyboard,
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: Row(
@@ -272,7 +407,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
               children: List.generate(
                 _length,
                 (i) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: _otpBox(i),
                 ),
               ),
@@ -316,46 +451,47 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Icon(success ? Icons.check_circle : Icons.error,
-              size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            success
-                ? 'تم التحقق من الرمز بنجاح'
-                : 'الرمز غير صحيح، حاول مرة أخرى',
-            style: TextStyle(fontSize: 13, color: color),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(success ? Icons.check_circle : Icons.error,
+                  size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                success ? 'تم التحقق من الرمز بنجاح' : 'الرمز غير صحيح',
+                style: TextStyle(fontSize: 13, color: color),
+              ),
+            ],
           ),
+          // عدد المحاولات المتبقية
+          if (!success && _failedAttempts < _maxAttempts) ...[
+            const SizedBox(height: 4),
+            Text(
+              _remainingText,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.neutralDark,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
+  /// زر نصي دائمًا: معطل ورمادي أثناء العدّاد، ويتفعل بعد انتهائه
   Widget _resendRow() {
-    if (_secondsLeft > 0) {
-      return Text.rich(
-        TextSpan(
-          style: TextStyle(fontSize: 14, color: AppColors.neutralDarkActive),
-          children: [
-            const TextSpan(text: 'إعادة إرسال الرمز خلال '),
-            TextSpan(
-              text: _timeText,
-              style: TextStyle(color: AppColors.primary500),
-            ),
-          ],
-        ),
-      );
-    }
+    final waiting = _secondsLeft > 0;
     return TextButton(
-      onPressed: _resend,
+      onPressed: waiting ? null : _resend,
       child: Text(
-        'إعادة إرسال الرمز',
+        waiting ? 'إعادة إرسال الرمز ($_timeText)' : 'إعادة إرسال الرمز',
         style: TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary500,
+          fontWeight: waiting ? FontWeight.w400 : FontWeight.w600,
+          color: waiting ? AppColors.neutralNormal : AppColors.primary500,
         ),
       ),
     );
@@ -398,7 +534,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             ? (isChangePhone
                                 ? 'تم تغيير رقم هاتفك بنجاح'
                                 : 'تم التحقق من رقم هاتفك بنجاح')
-                            : 'أدخل الرمز المكوّن من 4 أرقام المرسل إلى',
+                            : 'أدخل الرمز المكوّن من 6 أرقام المرسل إلى',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -424,6 +560,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             text: 'متابعة',
                             icon: Icons.arrow_back,
                             onPressed: _continue,
+                          ),
+                        )
+                      // بالخطأ (قبل الحد الأقصى): "إعادة المحاولة" بدل "تأكيد"
+                      else if (_state == _VerifyState.error &&
+                          _failedAttempts < _maxAttempts)
+                        SizedBox(
+                          height: 50,
+                          width: double.infinity,
+                          child: AppButton(
+                            text: 'إعادة المحاولة',
+                            onPressed: _retry,
                           ),
                         )
                       else

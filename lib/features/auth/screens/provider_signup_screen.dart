@@ -5,8 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_first_app/core/constants/gaza_governorates.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/auth/screens/verification_screen.dart';
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 import 'package:my_first_app/features/auth/widgets/join_stepper.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
+import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 /// خيارات الانضمام 🔥 Firebase/Supabase: تُقرأ من قاعدة البيانات لاحقًا
 class ProviderJoinOptions {
@@ -100,13 +103,19 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
 
   bool _validateStep1() {
     final e = <String, String>{};
-    if (_nameCtrl.text.trim().isEmpty) e['name'] = 'اكتبي الاسم الكامل';
+    if (_nameCtrl.text.trim().isEmpty) e['name'] = 'اكتب الاسم الكامل';
     if (_idCtrl.text.trim().length != 9) {
       e['id'] = 'رقم الهوية يتكوّن من 9 أرقام';
     }
-    if (_phone.length != 9) e['phone'] = 'أدخلي رقم هاتف صحيح مكوّن من 9 أرقام';
-    if (_governorate == null) e['governorate'] = 'اختاري المحافظة';
-    if (_addressCtrl.text.trim().isEmpty) e['address'] = 'اكتبي العنوان التفصيلي';
+    if (_phone.length != 9) e['phone'] = 'أدخل رقم هاتف صحيح مكوّن من 9 أرقام';
+    // البريد اختياري: نتحقق من الصيغة فقط إن كُتب
+    final email = _emailCtrl.text.trim();
+    if (email.isNotEmpty &&
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      e['email'] = 'صيغة البريد الإلكتروني غير صحيحة';
+    }
+    if (_governorate == null) e['governorate'] = 'اختر المحافظة';
+    if (_addressCtrl.text.trim().isEmpty) e['address'] = 'اكتب العنوان التفصيلي';
     setState(() => _errors
       ..clear()
       ..addAll(e));
@@ -115,13 +124,16 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
 
   bool _validateStep2() {
     final e = <String, String>{};
-    if (_specialty == null) e['specialty'] = 'اختاري التخصص';
-    if (_yearsCtrl.text.trim().isEmpty) e['years'] = 'اكتبي سنوات الخبرة';
+    if (_specialty == null) e['specialty'] = 'اختر التخصص';
+    if (_bioCtrl.text.trim().length < 20) {
+      e['bio'] = 'اكتب نبذة من 20 حرفًا على الأقل';
+    }
+    if (_yearsCtrl.text.trim().isEmpty) e['years'] = 'اكتب سنوات الخبرة';
     final hasOther = _otherService && _otherCtrl.text.trim().isNotEmpty;
     if (_services.isEmpty && !hasOther) {
       e['services'] = _otherService
-          ? 'اكتبي اسم الخدمة الأخرى'
-          : 'اختاري خدمة واحدة على الأقل';
+          ? 'اكتب اسم الخدمة الأخرى'
+          : 'اختر خدمة واحدة على الأقل';
     }
     setState(() => _errors
       ..clear()
@@ -135,11 +147,56 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
   }
 
   bool get _canSubmit =>
-      _licensePath != null && _idPhotoPath != null && _agreed;
+      _licensePath != null &&
+      _idPhotoPath != null &&
+      _photoPath != null &&
+      _agreed;
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_canSubmit) return;
-    // 🔥 Firebase/Supabase: حفظ الطلب بحالة pending مع روابط المستندات
+
+    // الرقم مسجل كمريض ← نرجعها لخطوة 1 بدون إرسال رمز
+    if (AuthRoleRepository.isPhoneUsedAsPatient(_phone)) {
+      await showProviderDialog(
+        context,
+        title: 'رقم مستخدم',
+        message: 'هذا الرقم مسجل كمريض، استخدم رقمًا آخر لتقديم الطلب.',
+        confirmText: 'حسنًا',
+      );
+      if (!mounted) return;
+      setState(() {
+        _errors.clear();
+        _step = 0;
+      });
+      return;
+    }
+
+    // عنده طلب قائم (قيد المراجعة أو مقبول)
+    if (AuthRoleRepository.hasActiveApplication(_phone)) {
+      await showProviderDialog(
+        context,
+        title: 'طلب قائم',
+        message: 'لديك طلب انضمام قائم بهذا الرقم.',
+        confirmText: 'حسنًا',
+      );
+      return;
+    }
+
+    // 🔥 Firebase: verifyPhoneNumber قبل حفظ الطلب
+    // بدون <bool> لأن مسارات AppRoutes من نوع dynamic
+    final ok = await Navigator.pushNamed(
+      context,
+      'Verification',
+      arguments: VerificationArgs('+970$_phone', isProviderJoin: true),
+    );
+    if (ok != true || !mounted) return;
+
+    // 🔥 Firebase: حفظ الطلب بحالة pending مع روابط المستندات
+    await AuthRoleRepository.submitApplication(
+      phone: _phone,
+      name: _nameCtrl.text.trim(),
+    );
+    if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, 'ProviderPending', (r) => false);
   }
 
@@ -184,17 +241,19 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
     );
   }
 
-  Widget _label(String text, {bool optional = false}) {
+  /// hintText: نص صغير بجانب العنوان بدل "(اختياري)"
+  Widget _label(String text, {bool optional = false, String? hintText}) {
+    final side = hintText ?? (optional ? 'اختياري' : null);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text.rich(
         TextSpan(
           text: text,
           children: [
-            if (optional)
-              const TextSpan(
-                text: ' (اختياري)',
-                style: TextStyle(color: AppColors.neutralNormal),
+            if (side != null)
+              TextSpan(
+                text: ' ($side)',
+                style: const TextStyle(color: AppColors.neutralNormal),
               ),
           ],
         ),
@@ -414,7 +473,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
   List<Widget> _step1() {
     return [
       const Text(
-        'أكملي الخطوات الثلاث وأرسلي الطلب. تراجع الإدارة المستندات قبل تفعيل حسابك، وتصلك النتيجة داخل التطبيق.',
+        'أكمل الخطوات الثلاث وأرسل الطلب. تراجع الإدارة المستندات قبل تفعيل حسابك، وتصلك النتيجة داخل التطبيق.',
         style: TextStyle(
           fontSize: 13,
           height: 1.6,
@@ -460,7 +519,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
       _dropdown(
         keyName: 'governorate',
         label: 'المحافظة',
-        hint: 'اختاري المحافظة',
+        hint: 'اختر المحافظة',
         value: _governorate,
         items: [
           for (final g in gazaGovernorates)
@@ -474,12 +533,6 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
         label: 'العنوان التفصيلي',
         controller: _addressCtrl,
         hint: 'الشارع، أقرب معلم',
-      ),
-      _note('يُستخدم للتواصل معك ولا يظهر للمرضى.'),
-      const SizedBox(height: 8),
-      const Text(
-        'تصلك طلبات المرضى في محافظتك فقط.',
-        style: TextStyle(fontSize: 12, color: AppColors.primary700),
       ),
     ];
   }
@@ -526,7 +579,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
       _dropdown(
         keyName: 'specialty',
         label: 'التخصص',
-        hint: 'اختاري التخصص',
+        hint: 'اختر التخصص',
         value: _specialty,
         items: [
           for (final s in ProviderJoinOptions.specialties)
@@ -535,7 +588,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
         onChanged: (v) => setState(() => _specialty = v),
       ),
       const SizedBox(height: 16),
-      _label('نبذة عني', optional: true),
+      _label('نبذة عني', hintText: '20 حرفًا على الأقل'),
       Container(
         constraints: const BoxConstraints(minHeight: 96),
         decoration: _box('bio'),
@@ -543,19 +596,22 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
           controller: _bioCtrl,
           minLines: 4,
           maxLines: null,
+          maxLength: 300,
+          onChanged: (_) => _clearError('bio'),
           style: const TextStyle(
             fontSize: 14,
             height: 1.6,
             color: AppColors.neutralDarkActive,
           ),
           decoration: const InputDecoration(
-            hintText: 'عرّفي المرضى بنفسك وبخبرتك باختصار',
+            hintText: 'عرّف المرضى بنفسك وبخبرتك باختصار',
             hintStyle: TextStyle(fontSize: 13, color: AppColors.neutralNormal),
             border: InputBorder.none,
             contentPadding: EdgeInsets.all(16),
           ),
         ),
       ),
+      _errorText('bio'),
       const SizedBox(height: 16),
       _field(
         keyName: 'years',
@@ -569,7 +625,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
         ],
       ),
       const SizedBox(height: 32),
-      _sectionTitle('الخدمات التي أقدمها', trailing: 'اختاري واحدة على الأقل'),
+      _sectionTitle('الخدمات التي أقدمها', trailing: 'اختر واحدة على الأقل'),
       Container(
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -617,7 +673,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
                           color: AppColors.neutralDarkActive,
                         ),
                         decoration: const InputDecoration(
-                          hintText: 'اكتبي اسم الخدمة',
+                          hintText: 'اكتب اسم الخدمة',
                           hintStyle: TextStyle(
                             fontSize: 13,
                             color: AppColors.neutralNormal,
@@ -628,7 +684,6 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
                         ),
                       ),
                     ),
-                    _note('ستراجعها الإدارة وتضاف إلى قائمة الخدمات.'),
                   ],
                 ),
               ),
@@ -740,7 +795,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
 
   List<Widget> _step3() {
     return [
-      _sectionTitle('المستندات', trailing: 'لا تظهر للمرضى'),
+      _sectionTitle('المستندات'),
       _uploadCard(
         title: 'رخصة مزاولة المهنة',
         subtitle: 'صورة واضحة للرخصة',
@@ -759,8 +814,8 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
       const SizedBox(height: 8),
       _uploadCard(
         title: 'صورة شخصية',
-        subtitle: 'اختيارية، تظهر للمرضى',
-        required: false,
+        subtitle: 'تظهر للمرضى',
+        required: true,
         path: _photoPath,
         onPicked: (p) => setState(() => _photoPath = p),
       ),
