@@ -45,7 +45,7 @@ import 'package:my_first_app/features/provider/screens/provider_help_screen.dart
 import 'package:my_first_app/features/auth/screens/provider_signup_screen.dart';
 import 'package:my_first_app/features/auth/screens/provider_pending_screen.dart';
 import 'package:my_first_app/features/auth/screens/provider_approved_screen.dart';
-import 'package:my_first_app/features/dev.dart/role_switch_screen.dart';
+import 'package:my_first_app/features/auth/screens/provider_rejected_screen.dart';
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     // general
@@ -106,9 +106,7 @@ class AppRoutes {
     "ProviderSignup": (context) => const ProviderSignupScreen(),
     "ProviderPending": (context) => const ProviderPendingScreen(),
     "ProviderApproved": (context) => const ProviderApprovedScreen(),
-
-    // مؤقت للتجربة
-    "DevRoleSwitch": (context) => const RoleSwitchScreen(),
+    "ProviderRejected": (context) => const ProviderRejectedScreen(),
 };
 }
 

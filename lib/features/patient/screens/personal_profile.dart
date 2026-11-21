@@ -5,7 +5,7 @@ import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/patient/widgets/patient_avatar.dart';
-
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 class PersonalProfileScreen extends StatelessWidget {
   const PersonalProfileScreen({super.key});
 
@@ -243,8 +243,9 @@ class PersonalProfileScreen extends StatelessWidget {
     );
 
     if (confirmed != true || !context.mounted) return;
-    // TODO: لاحقاً FirebaseAuth.instance.signOut() قبل الانتقال
-    Navigator.pushNamedAndRemoveUntil(context, 'Login', (route) => false);
+    await AuthRoleRepository.signOut();
+    if (!context.mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, 'Login', (route) => false);
   }
 
   @override

@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_first_app/features/auth/services/route_resolver.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -19,10 +20,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // 🔥 لاحقًا: إن كان المستخدم مسجلًا (FirebaseAuth.currentUser != null) نتخطى Onboarding/Login ونستدعي AuthRoleRepository.routeFor مباشرة
-    _timer = Timer(const Duration(milliseconds: 2500), () {
+    _timer = Timer(const Duration(milliseconds: 2500), () async {
       if (!mounted) return;
+
+      // مستخدم مسجّل من قبل: ننتقل مباشرة لشاشته
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final route = await resolveRouteWithRetry(
+          context,
+          user.phoneNumber ?? '',
+        );
+        if (!mounted) return;
+        // إلغاء من شاشة عدم الاتصال ← الدخول، والجلسة باقية لمحاولة لاحقة
+        Navigator.pushReplacementNamed(context, route ?? 'Login');
+        return;
+      }
+
       Navigator.pushReplacementNamed(context, 'Onboarding');
     });
   }

@@ -1,30 +1,38 @@
 import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/core/widgets/success_check.dart';
-import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
+import 'package:my_first_app/features/auth/services/route_resolver.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
-import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 enum _VerifyState { idle, error, success }
+
+/// ترجعها شاشة التحقق عند تغيير الرقم إذا طلب Firebase دخولًا حديثًا
+const String kNeedsRecentLogin = 'requires-recent-login';
 
 /// شو بنبعت لشاشة التحقق: الرقم + نوع العملية
 class VerificationArgs {
   final String phone;
   final bool isChangePhone;
   final bool isProviderJoin; // طلب انضمام مقدم رعاية: يرجع true للمعالج
+  final bool isReauth; // التحقق قبل حذف الحساب: يرجع true للمعالج
   final String? verificationId; // من Firebase بعد إرسال الرمز
   final int? resendToken; // لإعادة إرسال الرمز
+  /// يُنفَّذ بعد نجاح التحقق والشاشة لسا ظاهرة (مثل حفظ طلب الانضمام)
+  final Future<void> Function(BuildContext context)? onVerified;
   const VerificationArgs(
     this.phone, {
     this.isChangePhone = false,
     this.isProviderJoin = false,
+    this.isReauth = false,
     this.verificationId,
     this.resendToken,
+    this.onVerified,
   });
 }
 
@@ -38,8 +46,6 @@ class VerificationScreen extends StatefulWidget {
 class _VerificationScreenState extends State<VerificationScreen> {
   static const int _length = 6;
   static const int _resendSeconds = 45;
-  // الكود الثابت للتجربة: فقط لما ما في verificationId (مثل تغيير الرقم)
-  static const String _testCode = '123456';
 
   static const String _shieldIcon = 'assets/icons/shield_check.svg';
 
@@ -55,6 +61,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
   bool _loading = false;
   String? _verificationId; // الجديد بعد إعادة الإرسال
   int? _resendToken;
+  bool _networkError = false; // الخطأ سببه الاتصال وليس الرمز
+  bool _busy = false; // أثناء تنفيذ onVerified (حفظ الطلب)
 
   @override
   void initState() {
@@ -111,13 +119,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _isComplete && _state == _VerifyState.idle && !_loading;
 
   /// الـ verificationId الحالي (الجديد بعد إعادة الإرسال أو اللي جاي من الدخول)
-  String? get _currentVerificationId =>
-      _verificationId ?? _args.verificationId;
+  String? get _currentVerificationId => _verificationId ?? _args.verificationId;
 
   Future<void> _resend() async {
     _codeController.clear();
     setState(() {
       _failedAttempts = 0;
+      _networkError = false;
       _state = _VerifyState.idle;
     });
     _startTimer();
@@ -146,15 +154,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     if (!_isComplete) return;
 
     final verificationId = _currentVerificationId;
-    if (verificationId == null) {
-      // الكود الثابت (تغيير الرقم وطلب الانضمام)
-      if (_codeController.text == _testCode) {
-        _timer?.cancel();
-        _focus.unfocus();
-        setState(() => _state = _VerifyState.success);
-        return;
-      }
-    } else {
+    if (verificationId != null) {
       // التحقق عبر Firebase
       setState(() => _loading = true);
       try {
@@ -162,7 +162,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
           verificationId: verificationId,
           smsCode: _codeController.text,
         );
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        if (_args.isChangePhone) {
+          // تغيير الرقم: نربط الرقم الجديد بنفس الحساب
+          await FirebaseAuth.instance.currentUser!.updatePhoneNumber(
+            credential,
+          );
+        } else {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+        }
         if (!mounted) return;
         _timer?.cancel();
         _focus.unfocus();
@@ -171,15 +178,46 @@ class _VerificationScreenState extends State<VerificationScreen> {
           _loading = false;
         });
         return;
-      } on FirebaseAuthException {
+      } on FirebaseAuthException catch (e) {
         if (!mounted) return;
+        // انقطاع الإنترنت: رسالة اتصال، ولا تُحسب محاولة خاطئة
+        if (e.code == 'network-request-failed') {
+          setState(() {
+            _loading = false;
+            _networkError = true;
+            _state = _VerifyState.error;
+          });
+          return;
+        }
         setState(() => _loading = false);
+
+        if (_args.isChangePhone) {
+          // الرقم مربوط بحساب آخر
+          if (e.code == 'credential-already-in-use' ||
+              e.code == 'account-exists-with-different-credential') {
+            await showProviderDialog(
+              context,
+              title: 'هذا الرقم مستخدم',
+              message: 'هذا الرقم مسجّل لحساب آخر، جرّب رقمًا مختلفًا.',
+              confirmText: 'حسنًا',
+            );
+            if (!mounted) return;
+            Navigator.pop(context, false);
+            return;
+          }
+          // دخول قديم: المنادي يعيد التحقق ثم يحاول مرة ثانية
+          if (e.code == 'requires-recent-login') {
+            Navigator.pop(context, kNeedsRecentLogin);
+            return;
+          }
+        }
         // يكمل تحت كرمز خاطئ (خانات حمراء + عدّاد المحاولات)
       }
     }
 
     // رمز خاطئ: العدّاد يبقى شغال
     setState(() {
+      _networkError = false;
       _failedAttempts++;
       _state = _VerifyState.error;
     });
@@ -200,8 +238,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   /// زر "إعادة المحاولة": يمسح الخانات ويرجع للحالة الطبيعية
   void _retry() {
-    _codeController.clear();
-    setState(() => _state = _VerifyState.idle);
+    // خطأ الاتصال: الرمز يبقى مكتوبًا ليضغط "تأكيد" مجددًا
+    if (!_networkError) _codeController.clear();
+    setState(() {
+      _networkError = false;
+      _state = _VerifyState.idle;
+    });
     _showKeyboard();
   }
 
@@ -213,46 +255,41 @@ class _VerificationScreenState extends State<VerificationScreen> {
   }
 
   Future<void> _continue() async {
-    // حالة طلب الانضمام: نرجع للمعالج بنجاح التحقق
+    // حالة طلب الانضمام: نحفظ الطلب والشاشة ظاهرة، وهي اللي بتنقل
     if (_args.isProviderJoin) {
+      final onVerified = _args.onVerified;
+      if (onVerified != null) {
+        setState(() => _busy = true);
+        try {
+          await onVerified(context);
+        } finally {
+          if (mounted) setState(() => _busy = false);
+        }
+        return;
+      }
       Navigator.pop(context, true);
       return;
     }
 
-    // حالة تغيير رقم الهاتف
+    // حالة التحقق قبل حذف الحساب: نرجع للمعالج بنجاح التحقق
+    if (_args.isReauth) {
+      Navigator.pop(context, true);
+      return;
+    }
+
+    // حالة تغيير رقم الهاتف: نرجع للمنادي، وهو يحدّث Firestore
     if (_args.isChangePhone) {
-      await PatientRepository.updatePhone(_args.phone);
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      // نرجع لصفحة تعديل الملف الشخصي
-      Navigator.popUntil(context, ModalRoute.withName('EditPersonalInfo'));
-      messenger.showSnackBar(
-        const SnackBar(content: Text('تم تغيير رقم الهاتف بنجاح')),
-      );
+      Navigator.pop(context, true);
       return;
     }
 
     // حالة تسجيل الدخول
     final phone = _args.phone;
-    AuthRoleRepository.lastPhone = phone;
 
-    // مؤقت: يفتح شاشة اختيار التطبيق للتجربة
-    if (kDevMode) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        'DevRoleSwitch',
-        (route) => false,
-      );
-      return;
-    }
-
-    // 🔥 Firebase: الدور يُقرأ من Firestore بعد نجاح الرمز
-    final route = await AuthRoleRepository.routeFor(phone);
-    if (!mounted) return;
-    if (AuthRoleRepository.hasUnseenRejection) {
-      await showRejectionDialog(context);
-      if (!mounted) return;
-    }
+    // الدور يُقرأ من Firestore. عند فشل الاتصال تظهر شاشة "لا يوجد اتصال"، والإلغاء يبقينا هنا
+    final route = await resolveRouteWithRetry(context, phone);
+    if (!mounted || route == null) return;
+    // المرفوض: routeFor بترجع 'ProviderRejected' (بدل حوار الرفض القديم)
     Navigator.pushNamedAndRemoveUntil(context, route, (r) => false);
   }
 
@@ -272,7 +309,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: IconButton(
-              onPressed: () => Navigator.pop(context),
+              // ما في رجوع أثناء حفظ الطلب
+              onPressed: _busy ? null : () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
           ),
@@ -433,6 +471,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 setState(() {
                   if (_state == _VerifyState.error) {
                     _state = _VerifyState.idle;
+                    _networkError = false;
                   }
                 });
               },
@@ -456,17 +495,24 @@ class _VerificationScreenState extends State<VerificationScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(success ? Icons.check_circle : Icons.error,
-                  size: 16, color: color),
+              Icon(
+                success ? Icons.check_circle : Icons.error,
+                size: 16,
+                color: color,
+              ),
               const SizedBox(width: 6),
               Text(
-                success ? 'تم التحقق من الرمز بنجاح' : 'الرمز غير صحيح',
+                success
+                    ? 'تم التحقق من الرمز بنجاح'
+                    : _networkError
+                        ? 'تحقق من الاتصال بالإنترنت ثم حاول مرة أخرى.'
+                        : 'الرمز غير صحيح',
                 style: TextStyle(fontSize: 13, color: color),
               ),
             ],
           ),
-          // عدد المحاولات المتبقية
-          if (!success && _failedAttempts < _maxAttempts) ...[
+          // عدد المحاولات المتبقية (مش لخطأ الاتصال)
+          if (!success && !_networkError && _failedAttempts < _maxAttempts) ...[
             const SizedBox(height: 4),
             Text(
               _remainingText,
@@ -505,99 +551,103 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColors.white,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _header(),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
-                  child: Column(
-                    children: [
-                      _topIcon(),
-                      const SizedBox(height: 16),
+      // زر الرجوع في النظام ممنوع أثناء حفظ الطلب
+      child: PopScope(
+        canPop: !_busy,
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _header(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
+                    child: Column(
+                      children: [
+                        _topIcon(),
+                        const SizedBox(height: 16),
 
-                      Text(
-                        success ? 'تم التحقق من الرمز!' : 'رمز التحقق',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      Text(
-                        success
-                            ? (isChangePhone
-                                ? 'تم تغيير رقم هاتفك بنجاح'
-                                : 'تم التحقق من رقم هاتفك بنجاح')
-                            : 'أدخل الرمز المكوّن من 6 أرقام المرسل إلى',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: AppColors.neutralDark,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      _phoneChip(phone),
-                      const SizedBox(height: 32),
-
-                      _otpRow(),
-                      _statusMessage(),
-                      const SizedBox(height: 24),
-
-                      // الزر: "متابعة" بالنجاح، "تأكيد" غير ذلك
-                      if (success)
-                        SizedBox(
-                          height: 50,
-                          width: double.infinity,
-                          child: AppButton(
-                            text: 'متابعة',
-                            icon: Icons.arrow_back,
-                            onPressed: _continue,
+                        Text(
+                          success ? 'تم التحقق من الرمز!' : 'رمز التحقق',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary800,
                           ),
-                        )
-                      // بالخطأ (قبل الحد الأقصى): "إعادة المحاولة" بدل "تأكيد"
-                      else if (_state == _VerifyState.error &&
-                          _failedAttempts < _maxAttempts)
-                        SizedBox(
-                          height: 50,
-                          width: double.infinity,
-                          child: AppButton(
-                            text: 'إعادة المحاولة',
-                            onPressed: _retry,
+                        ),
+                        const SizedBox(height: 8),
+
+                        Text(
+                          success
+                              ? (isChangePhone
+                                    ? 'تم تغيير رقم هاتفك بنجاح'
+                                    : 'تم التحقق من رقم هاتفك بنجاح')
+                              : 'أدخل الرمز المكوّن من 6 أرقام المرسل إلى',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: AppColors.neutralDark,
                           ),
-                        )
-                      else
-                        Opacity(
-                          opacity: _canConfirm ? 1 : 0.5,
-                          child: IgnorePointer(
-                            ignoring: !_canConfirm,
-                            child: SizedBox(
-                              height: 50,
-                              width: double.infinity,
-                              child: AppButton(
-                                text: 'تأكيد',
-                                onPressed: _verify,
+                        ),
+                        const SizedBox(height: 8),
+
+                        _phoneChip(phone),
+                        const SizedBox(height: 32),
+
+                        _otpRow(),
+                        _statusMessage(),
+                        const SizedBox(height: 24),
+
+                        // الزر: "متابعة" بالنجاح، "تأكيد" غير ذلك
+                        if (success)
+                          SizedBox(
+                            height: 50,
+                            width: double.infinity,
+                            child: AppButton(
+                              text: _busy ? 'جارٍ الإرسال...' : 'متابعة',
+                              icon: _busy ? null : Icons.arrow_back,
+                              onPressed: _busy ? null : _continue,
+                            ),
+                          )
+                        // بالخطأ (قبل الحد الأقصى): "إعادة المحاولة" بدل "تأكيد"
+                        else if (_state == _VerifyState.error &&
+                            _failedAttempts < _maxAttempts)
+                          SizedBox(
+                            height: 50,
+                            width: double.infinity,
+                            child: AppButton(
+                              text: 'إعادة المحاولة',
+                              onPressed: _retry,
+                            ),
+                          )
+                        else
+                          Opacity(
+                            opacity: _canConfirm ? 1 : 0.5,
+                            child: IgnorePointer(
+                              ignoring: !_canConfirm,
+                              child: SizedBox(
+                                height: 50,
+                                width: double.infinity,
+                                child: AppButton(
+                                  text: 'تأكيد',
+                                  onPressed: _verify,
+                                ),
                               ),
                             ),
                           ),
-                        ),
 
-                      if (!success) ...[
-                        const SizedBox(height: 20),
-                        _resendRow(),
+                        if (!success) ...[
+                          const SizedBox(height: 20),
+                          _resendRow(),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

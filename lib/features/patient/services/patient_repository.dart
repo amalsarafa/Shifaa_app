@@ -153,7 +153,6 @@ class PatientRepository {
     /// تغيير رقم الهاتف، بعد التحقق من الرقم الجديد بالكود
   static Future<void> updatePhone(String phone) async {
     final p = current.value;
-    // 🔥 لاحقاً: FirebaseAuth updatePhoneNumber + تحديث جدول users
     current.value = Patient(
       id: p.id,
       name: p.name,

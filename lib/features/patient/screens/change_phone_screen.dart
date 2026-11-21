@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
-import 'package:my_first_app/features/auth/screens/verification_screen.dart';
+import 'package:my_first_app/features/auth/services/change_phone_flow.dart';
 import 'package:my_first_app/features/patient/services/patient_repository.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
+import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
 
 class ChangePhoneScreen extends StatefulWidget {
   const ChangePhoneScreen({super.key});
@@ -16,6 +17,7 @@ class ChangePhoneScreen extends StatefulWidget {
 class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
   final TextEditingController _phoneCtrl = TextEditingController();
   String? _error;
+  bool _sending = false; // يمنع الضغط المتكرر
 
   @override
   void dispose() {
@@ -23,7 +25,8 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
     super.dispose();
   }
 
-  void _sendCode() {
+  Future<void> _sendCode() async {
+    if (_sending) return;
     var phone = _phoneCtrl.text.trim();
     if (phone.startsWith('0')) phone = phone.substring(1);
 
@@ -32,25 +35,30 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
       return;
     }
 
-    // ما في داعي نغيّر لنفس الرقم
-    final current = PatientRepository.current.value.phone.replaceAll(' ', '');
-    if ('+970$phone' == current) {
-      setState(() => _error = 'هذا هو رقمك الحالي');
-      return;
-    }
-
     setState(() => _error = null);
     FocusScope.of(context).unfocus();
 
-    // TODO: لاحقاً Firebase verifyPhoneNumber للرقم الجديد
-    Navigator.pushNamed(
+    // تغيير الرقم عبر Firebase (رمز للرقم الجديد ثم حفظه)
+    _sending = true;
+    final bool ok;
+    try {
+      ok = await changePhoneFlow(context, phone);
+    } finally {
+      _sending = false;
+    }
+    if (!ok || !mounted) return;
+
+    // تحديث الرقم المعروض
+    await PatientRepository.updatePhone(PatientRepository.formatPhone(phone));
+    if (!mounted) return;
+    await showProviderDialog(
       context,
-      'Verification',
-      arguments: VerificationArgs(
-        PatientRepository.formatPhone(phone),
-        isChangePhone: true,
-      ),
+      title: 'تم تغيير رقم الهاتف',
+      message: 'سيُستعمل رقمك الجديد في تسجيل الدخول من الآن.',
+      confirmText: 'حسنًا',
     );
+    if (!mounted) return;
+    Navigator.pop(context); // يرجع لصفحة تعديل الملف الشخصي
   }
 
   Widget _phoneInput() {

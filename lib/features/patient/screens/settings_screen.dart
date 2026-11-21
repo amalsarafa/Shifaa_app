@@ -1,6 +1,7 @@
 // lib/features/patient/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/auth/services/delete_account_flow.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -25,8 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    // 🔥 لاحقاً: حذف الحساب وبياناته من Firebase قبل الخروج
-    Navigator.pushNamedAndRemoveUntil(context, 'Login', (route) => false);
+    await deleteAccountFlow(context);
   }
 
   // ───────────────────────── مكونات مساعدة ─────────────────────────

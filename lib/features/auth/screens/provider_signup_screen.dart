@@ -7,10 +7,11 @@ import 'package:my_first_app/core/constants/gaza_governorates.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
 import 'package:my_first_app/features/auth/screens/verification_screen.dart';
 import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
+import 'package:my_first_app/features/auth/services/route_resolver.dart';
 import 'package:my_first_app/features/auth/widgets/join_stepper.dart';
 import 'package:my_first_app/features/patient/widgets/app_button.dart';
 import 'package:my_first_app/features/provider/widgets/provider_dialog.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 /// خيارات الانضمام 🔥 Firebase/Supabase: تُقرأ من قاعدة البيانات لاحقًا
 class ProviderJoinOptions {
   ProviderJoinOptions._();
@@ -62,7 +63,7 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
   String? _idPhotoPath;
   String? _photoPath;
   bool _agreed = false;
-
+  bool _sending = false;
   /// رسائل الخطأ تحت كل حقل (المفتاح = اسم الحقل)
   final Map<String, String> _errors = {};
 
@@ -152,52 +153,115 @@ class _ProviderSignupScreenState extends State<ProviderSignupScreen> {
       _photoPath != null &&
       _agreed;
 
-  Future<void> _submit() async {
-    if (!_canSubmit) return;
+    Future<void> _submit() async {
+    if (!_canSubmit || _sending) return;
+    setState(() => _sending = true);
 
-    // الرقم مسجل كمريض ← نرجعها لخطوة 1 بدون إرسال رمز
-    if (AuthRoleRepository.isPhoneUsedAsPatient(_phone)) {
-      await showProviderDialog(
+    // 1) إرسال رمز التحقق عبر Firebase
+    try {
+      final sent = await AuthRoleRepository.sendCode('+970$_phone');
+      if (!mounted) return;
+      if (sent == null) {
+        await showProviderDialog(
+          context,
+          title: 'تعذّر إرسال الرمز',
+          message: 'تحقق من الرقم والاتصال بالإنترنت ثم حاول مرة أخرى.',
+          confirmText: 'حسنًا',
+        );
+        return;
+      }
+
+      // 2) شاشة التحقق: بعد نجاح الرمز تنفّذ _afterVerified وهي ظاهرة
+      await Navigator.pushNamed(
         context,
+        'Verification',
+        arguments: VerificationArgs(
+          '+970$_phone',
+          isProviderJoin: true,
+          verificationId: sent.verificationId,
+          resendToken: sent.resendToken,
+          onVerified: _afterVerified,
+        ),
+      );
+    } finally {
+      // فشل الإرسال أو الرجوع لهذه الشاشة: الزر يرجع يشتغل
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  /// 3) حفظ الطلب في Firestore (من شاشة التحقق، vctx هو سياقها)
+  Future<void> _afterVerified(BuildContext vctx) async {
+    final SubmitResult result;
+    try {
+      result = await AuthRoleRepository.submitApplication(
+        phone: _phone,
+        name: _nameCtrl.text.trim(),
+        extra: {
+          'nationalId': _idCtrl.text.trim(),
+          'email': _emailCtrl.text.trim(),
+          'governorate': _governorate,
+          'address': _addressCtrl.text.trim(),
+          'specialty': _specialty,
+          'bio': _bioCtrl.text.trim(),
+          'yearsOfExperience': _yearsCtrl.text.trim(),
+          'services': _services.toList(),
+          'otherService': _otherService ? _otherCtrl.text.trim() : null,
+        },
+      );
+    } catch (e) {
+      debugPrint('submitApplication error: $e');
+      if (!vctx.mounted) return;
+      await showProviderDialog(
+        vctx,
+        title: 'تعذّر إرسال الطلب',
+        message: 'حاول مرة أخرى لاحقًا.',
+        confirmText: 'حسنًا',
+      );
+      if (!vctx.mounted) return;
+      Navigator.pop(vctx); // يرجع لشاشة المستندات
+      return;
+    }
+    if (!vctx.mounted) return;
+
+    // الرقم مسجّل كمريض ← نرجعه لخطوة 1
+    if (result == SubmitResult.patient) {
+      await FirebaseAuth.instance.signOut();
+      await AuthRoleRepository.clear();
+      if (!vctx.mounted) return;
+      await showProviderDialog(
+        vctx,
         title: 'رقم مستخدم',
         message: 'هذا الرقم مسجل كمريض، استخدم رقمًا آخر لتقديم الطلب.',
         confirmText: 'حسنًا',
       );
-      if (!mounted) return;
-      setState(() {
-        _errors.clear();
-        _step = 0;
-      });
+      if (!vctx.mounted) return;
+      Navigator.pop(vctx); // يرجع لشاشة المستندات
+      if (mounted) {
+        setState(() {
+          _errors.clear();
+          _step = 0;
+        });
+      }
       return;
     }
 
-    // عنده طلب قائم (قيد المراجعة أو مقبول)
-    if (AuthRoleRepository.hasActiveApplication(_phone)) {
+    // لديه طلب قائم ← ننقله لشاشة حالته
+    if (result == SubmitResult.existing) {
       await showProviderDialog(
-        context,
+        vctx,
         title: 'طلب قائم',
         message: 'لديك طلب انضمام قائم بهذا الرقم.',
         confirmText: 'حسنًا',
       );
+      if (!vctx.mounted) return;
+      // عند فشل الاتصال تظهر شاشة "لا يوجد اتصال"، والإلغاء يبقينا هنا
+      final route = await resolveRouteWithRetry(vctx, '+970$_phone');
+      if (!vctx.mounted || route == null) return;
+      Navigator.pushNamedAndRemoveUntil(vctx, route, (r) => false);
       return;
     }
 
-    // 🔥 Firebase: verifyPhoneNumber قبل حفظ الطلب
-    // بدون <bool> لأن مسارات AppRoutes من نوع dynamic
-    final ok = await Navigator.pushNamed(
-      context,
-      'Verification',
-      arguments: VerificationArgs('+970$_phone', isProviderJoin: true),
-    );
-    if (ok != true || !mounted) return;
-
-    // 🔥 Firebase: حفظ الطلب بحالة pending مع روابط المستندات
-    await AuthRoleRepository.submitApplication(
-      phone: _phone,
-      name: _nameCtrl.text.trim(),
-    );
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, 'ProviderPending', (r) => false);
+    Navigator.pushNamedAndRemoveUntil(vctx, 'ProviderPending', (r) => false);
   }
 
   /// يمسح خطأ الحقل أول ما تعدّل عليه

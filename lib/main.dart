@@ -92,7 +92,6 @@ class _MyAppState extends State<MyApp> {
       ),
       home: const SplashScreen(),
       //const LoginScreen(),
-      //const RoleSwitchScreen(),
       //const ProviderShell(),
       routes: AppRoutes.routes,
       builder: (context, child) {

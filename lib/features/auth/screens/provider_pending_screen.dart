@@ -42,7 +42,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
   @override
   void initState() {
     super.initState();
-    // 🔥 Firebase: الاستماع لتغيّر حالة الطلب في Firestore
+    // الاستماع لتغيّر حالة الطلب في Firestore
     AuthRoleRepository.application.addListener(_onStatusChanged);
   }
 
@@ -60,9 +60,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
       Navigator.pushReplacementNamed(context, 'ProviderApproved');
     } else if (status == ApplicationStatus.rejected) {
       _handled = true;
-      await showRejectionDialog(context);
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, 'Home', (r) => false);
+      Navigator.pushNamedAndRemoveUntil(context, 'ProviderRejected', (r) => false);
     }
   }
 
@@ -76,7 +74,8 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
       danger: true,
     );
     if (ok != true || !context.mounted) return;
-    // 🔥 Firebase/Supabase: FirebaseAuth.instance.signOut()
+    await AuthRoleRepository.signOut();
+    if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, 'Login', (r) => false);
   }
 
@@ -105,7 +104,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                     icon: Icons.schedule_outlined,
                     title: 'طلبك قيد المراجعة',
                     message:
-                        'استلمنا بياناتك ومستنداتك، وتراجعها الإدارة الآن. يمكنك إغلاق التطبيق، وسنواصل معك لاحقًا فور انتهاء المراجعة وسيصلك إشعار بالنتيجة.',
+                        'استلمنا بياناتك، وتراجعها الإدارة الآن. ستظهر النتيجة هنا فور صدورها.',
                   ),
                   const Spacer(),
                   AppButton(

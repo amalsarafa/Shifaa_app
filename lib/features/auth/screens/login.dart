@@ -80,6 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _error = switch (e.code) {
             'invalid-phone-number' => 'رقم الهاتف غير صحيح',
             'too-many-requests' => 'محاولات كثيرة، حاول لاحقًا',
+            'network-request-failed' =>
+              'تحقق من الاتصال بالإنترنت ثم حاول مرة أخرى.',
                       _ => 'تعذّر إرسال الرمز، حاول مرة أخرى',
           };
         });

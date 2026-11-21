@@ -41,7 +41,7 @@ class ProviderApprovedScreen extends StatelessWidget {
                     text: 'ابدأ الآن',
                     fontSize: 15,
                     onPressed: () {
-                      // 🔥 Firebase: حفظ welcomeSeen في Firestore
+                      // حفظ welcomeSeen في Firestore
                       AuthRoleRepository.markWelcomeSeen();
                       Navigator.pushNamedAndRemoveUntil(
                         context,

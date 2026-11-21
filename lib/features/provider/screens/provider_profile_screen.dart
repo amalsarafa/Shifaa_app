@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_first_app/core/routes/app_routes.dart';
 import 'package:my_first_app/core/theme/app_colors.dart';
+import 'package:my_first_app/features/auth/services/auth_role_repository.dart';
 import 'package:my_first_app/features/patient/widgets/patient_avatar.dart';
 import 'package:my_first_app/features/provider/services/provider_appointment_model.dart';
 import 'package:my_first_app/features/provider/widgets/app_button.dart';
@@ -438,8 +439,8 @@ class ProviderMyProfileScreen extends StatelessWidget {
     );
 
     if (confirmed != true || !context.mounted) return;
-    // 🔥 لاحقاً: FirebaseAuth.instance.signOut() قبل الانتقال
-    Navigator.pushNamedAndRemoveUntil(context, 'Login', (route) => false);
+    await AuthRoleRepository.signOut();
+    if (!context.mounted) return;    Navigator.pushNamedAndRemoveUntil(context, 'Login', (route) => false);
   }
 
   // ───────────────────────── البناء ─────────────────────────
